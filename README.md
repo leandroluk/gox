@@ -15,7 +15,6 @@ A collection of high-performance, decoupled, and type-safe Go libraries for mode
     - [Run tests across all modules](#run-tests-across-all-modules)
     - [Generate coverage + badges](#generate-coverage--badges)
   - [Modules](#modules)
-  - [Coverage badges](#coverage-badges)
   - [Project structure](#project-structure)
   - [Philosophy](#philosophy)
   - [Contributing](#contributing)
@@ -48,25 +47,6 @@ make badges
 | [**search**](./search)       | Generic query builder for complex filtering, sorting, and pagination.        |    [![coverage](.public/search-coverage.svg)](./search)    |
 | [**set**](./set)             | Tracks partial JSON updates to distinguish missing fields from zero-values.  |       [![coverage](.public/set-coverage.svg)](./set)       |
 | [**validator**](./validator) | Generic validator for complex filtering, sorting, and pagination.            | [![coverage](.public/validator-coverage.svg)](./validator) |
-
-## Coverage badges
-
-Coverage badges are generated into `.public/`:
-
-- `.public/coverage.svg` (overall workspace coverage)
-- `.public/<module>-coverage.svg` (per-module coverage)
-
-Each module README should reference its badge like this:
-
-```md
-![coverage](../.public/<module>-coverage.svg)
-```
-
-Example:
-
-```md
-![coverage](../.public/cqrs-coverage.svg)
-```
 
 ## Project structure
 

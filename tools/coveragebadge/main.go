@@ -1,4 +1,4 @@
-// tools/coveragebadge/main.go
+// Package main provides a tool to generate a coverage badge from a Go coverage profile.
 package main
 
 import (
@@ -13,22 +13,24 @@ import (
 	"strings"
 )
 
+// totalCoverage runs 'go tool cover' on the provided profile path and returns
+// the coverage percentage as a string and a float64.
 func totalCoverage(profilePath string) (string, float64, error) {
 	cmd := exec.Command("go", "tool", "cover", "-func="+profilePath)
 	b, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", 0, fmt.Errorf("go tool cover falhou: %v\n%s", err, string(b))
+		return "", 0, fmt.Errorf("go tool cover failed: %v\n%s", err, string(b))
 	}
 
 	lines := strings.Split(strings.TrimSpace(string(b)), "\n")
 	if len(lines) == 0 {
-		return "", 0, fmt.Errorf("saida vazia do go tool cover")
+		return "", 0, fmt.Errorf("empty output from go tool cover")
 	}
 
 	last := lines[len(lines)-1]
 	fields := strings.Fields(last)
 	if len(fields) == 0 {
-		return "", 0, fmt.Errorf("linha final inesperada: %q", last)
+		return "", 0, fmt.Errorf("unexpected final line: %q", last)
 	}
 
 	raw := fields[len(fields)-1]
@@ -36,12 +38,13 @@ func totalCoverage(profilePath string) (string, float64, error) {
 
 	value, err := strconv.ParseFloat(raw, 64)
 	if err != nil {
-		return "", 0, fmt.Errorf("percentual invalido: %q", raw)
+		return "", 0, fmt.Errorf("invalid percentage: %q", raw)
 	}
 
 	return raw, value, nil
 }
 
+// badgeColor returns a color name based on the coverage percentage.
 func badgeColor(p float64) string {
 	switch {
 	case p >= 90:
@@ -59,8 +62,10 @@ func badgeColor(p float64) string {
 	}
 }
 
+// download fetches a URL and saves the response body to the specified filepath.
 func download(url, filepath string) error {
 	resp, err := http.Get(url)
+	fmt.Println("Downloading", url)
 	if err != nil {
 		return err
 	}
@@ -81,19 +86,22 @@ func download(url, filepath string) error {
 	return err
 }
 
+// escape replaces special characters in a string to be used in a shields.io URL.
 func escape(s string) string {
 	return strings.NewReplacer("-", "--", "_", "__", " ", "_").Replace(s)
 }
 
+// fail prints an error message to stderr and exits the program with status 1.
 func fail(err error) {
 	fmt.Fprintln(os.Stderr, err.Error())
 	os.Exit(1)
 }
 
+// main parses command line flags and generates the coverage badge.
 func main() {
-	in := flag.String("in", "coverage.out", "")
-	out := flag.String("out", "badges/coverage.svg", "")
-	label := flag.String("label", "coverage", "")
+	in := flag.String("in", "coverage.out", "input coverage profile path")
+	out := flag.String("out", "badges/coverage.svg", "output badge SVG path")
+	label := flag.String("label", "coverage", "label for the badge")
 	flag.Parse()
 
 	percentText, percentValue, err := totalCoverage(*in)

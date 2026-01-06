@@ -8,8 +8,6 @@
 
 A collection of high-performance, decoupled, and type-safe Go libraries for modern application development.
 
----
-
 ## Contents
 - [Go Core Libraries](#go-core-libraries)
   - [Contents](#contents)
@@ -22,8 +20,6 @@ A collection of high-performance, decoupled, and type-safe Go libraries for mode
   - [Philosophy](#philosophy)
   - [Contributing](#contributing)
   - [License](#license)
-
----
 
 ## Getting started
 
@@ -41,8 +37,6 @@ make test
 make badges
 ```
 
----
-
 ## Modules
 
 | Module                       | Purpose                                                                      |                          Coverage                          |
@@ -54,8 +48,6 @@ make badges
 | [**search**](./search)       | Generic query builder for complex filtering, sorting, and pagination.        |    [![coverage](.public/search-coverage.svg)](./search)    |
 | [**set**](./set)             | Tracks partial JSON updates to distinguish missing fields from zero-values.  |       [![coverage](.public/set-coverage.svg)](./set)       |
 | [**validator**](./validator) | Generic validator for complex filtering, sorting, and pagination.            | [![coverage](.public/validator-coverage.svg)](./validator) |
-
----
 
 ## Coverage badges
 
@@ -76,8 +68,6 @@ Example:
 ![coverage](../.public/cqrs-coverage.svg)
 ```
 
----
-
 ## Project structure
 
 ```text
@@ -95,21 +85,15 @@ Example:
 └── Makefile         # common tasks (test/coverage/badges)
 ```
 
----
-
 ## Philosophy
 
 - **Zero Dependencies**: core modules aim for zero external dependencies.
 - **Type Safety**: heavy use of Generics to avoid `interface{}` and runtime casting errors.
 - **Convention over Configuration**: smart defaults (like JSON tag reflection) to reduce boilerplate.
 
----
-
 ## Contributing
 
 PRs are welcome. Keep changes scoped, tested, and consistent with the module style.
-
----
 
 ## License
 

@@ -1,10 +1,10 @@
-# Go Core Libraries
-
 <p>
   <img alt="Build Status" src="https://github.com/leandroluk/go/actions/workflows/ci.yml/badge.svg?branch=main">
   <img alt="Coverage" src=".public/coverage.svg">
   <img alt="Release" src="https://img.shields.io/github/release/leandroluk/go.svg?style=flat-square">
 </p>
+
+# Go Core Libraries
 
 A collection of high-performance, decoupled, and type-safe Go libraries for modern application development.
 

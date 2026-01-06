@@ -21,9 +21,10 @@ type User struct {
 }
 
 func init() {
-    meta.Describe(&User{},
+    var user User
+    meta.Describe(&user,
         meta.Description("Represents a system user"),
-        meta.Field(&(&User{}).ID, 
+        meta.Field(&user.ID, 
             meta.Description("Unique identifier"),
             meta.Example("usr_123"),
         ),

@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	nameSchema := validator.Text().
+	nameSchema := v.Text().
 		Required().
 		Min(3).
 		Max(50)
@@ -64,16 +64,16 @@ type User struct {
 }
 
 func main() {
-	validator.Object(func(u *User, s *validator.ObjectSchema[User]) {
-		s.Field(&u.Name, func(ctx *validator.Context, v any) (any, bool) {
-			return validator.Text().Required().Min(3).ValidateAny(v, ctx.Options)
+	v.Object(func(u *User, s *v.ObjectSchema[User]) {
+		s.Field(&u.Name, func(ctx *v.Context, v any) (any, bool) {
+			return v.Text().Required().Min(3).ValidateAny(v, ctx.Options)
 		})
-		s.Field(&u.Age, func(ctx *validator.Context, v any) (any, bool) {
-			return validator.NumberSchemaOf[int]().Min(0).Max(130).ValidateAny(v, ctx.Options)
+		s.Field(&u.Age, func(ctx *v.Context, v any) (any, bool) {
+			return v.NumberSchemaOf[int]().Min(0).Max(130).ValidateAny(v, ctx.Options)
 		})
 	})
 
-	out, err := validator.Validate[User]([]byte(`{"name":"John","age":30}`))
+	out, err := v.Validate[User]([]byte(`{"name":"John","age":30}`))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -88,10 +88,10 @@ func main() {
 By default, defaults apply to both `missing` and `null`. To disable for `null`, use `WithDefaultOnNull(false)`.
 
 ```go
-ageSchema := validator.NumberSchemaOf[int]().Default(18).Min(0).Max(130)
+ageSchema := v.NumberSchemaOf[int]().Default(18).Min(0).Max(130)
 
 a, _ := ageSchema.Validate(nil)
-b, _ := ageSchema.Validate(nil, validator.WithDefaultOnNull(false))
+b, _ := ageSchema.Validate(nil, v.WithDefaultOnNull(false))
 ```
 
 ### Coerce (opt-in) + flags
@@ -105,11 +105,11 @@ Common examples (depend on the schema):
 - `WithCoerceDurationSeconds(true)` / `WithCoerceDurationMilliseconds(true)` (e.g., `5` becomes `5s`/`5ms`).
 
 ```go
-n, err := validator.NumberSchemaOf[int]().Validate(
+n, err := v.NumberSchemaOf[int]().Validate(
   " 1_000 ",
-  validator.WithCoerce(true),
-  validator.WithCoerceTrimSpace(true),
-  validator.WithCoerceNumberUnderscore(true),
+  v.WithCoerce(true),
+  v.WithCoerceTrimSpace(true),
+  v.WithCoerceNumberUnderscore(true),
 )
 ```
 
@@ -118,7 +118,7 @@ n, err := validator.NumberSchemaOf[int]().Validate(
 When `WithOmitZero(true)` is active, "zero" values in structs/maps are omitted during reflected input.
 
 ```go
-out, err := validator.Validate[User](user, validator.WithOmitZero(true))
+out, err := v.Validate[User](user, v.WithOmitZero(true))
 ```
 
 ## Available Schemas (summary)

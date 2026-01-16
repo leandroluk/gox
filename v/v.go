@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/leandroluk/go/v/internal/ast"
 	"github.com/leandroluk/go/v/internal/engine"
 	"github.com/leandroluk/go/v/internal/issues"
 	"github.com/leandroluk/go/v/internal/registry"
@@ -22,6 +23,7 @@ import (
 	"github.com/leandroluk/go/v/schema/text"
 )
 
+type Value = ast.Value
 type Context = engine.Context
 type Issue = issues.Issue
 type ValidationError = issues.ValidationError

@@ -64,7 +64,7 @@ type User struct {
 }
 
 func main() {
-	v.Object(func(u *User, s *v.ObjectSchema[User]) {
+	schema := v.Object(func(u *User, s *v.ObjectSchema[User]) {
 		s.Field(&u.Name, func(ctx *v.Context, v any) (any, bool) {
 			return v.Text().Required().Min(3).ValidateAny(v, ctx.Options)
 		})
@@ -73,7 +73,7 @@ func main() {
 		})
 	})
 
-	out, err := v.Validate[User]([]byte(`{"name":"John","age":30}`))
+	out, err := schema.Validate[User]([]byte(`{"name":"John","age":30}`))
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/leandroluk/go/v/internal/engine"
 	"github.com/leandroluk/go/v/internal/issues"
 	"github.com/leandroluk/go/v/internal/registry"
 	"github.com/leandroluk/go/v/internal/types"
@@ -21,31 +22,36 @@ import (
 	"github.com/leandroluk/go/v/schema/text"
 )
 
-type Options = schema.Options
-type Option = schema.Option
-type Formatter = schema.Formatter
-
+type Context = engine.Context
 type Issue = issues.Issue
 type ValidationError = issues.ValidationError
 
+type Options = schema.Options
+type Option = schema.Option
+type Formatter = schema.Formatter
 type AnySchema = schema.AnySchema
 
 type ObjectSchema[T any] = object.Schema[T]
+
 type ArraySchema[E any] = array.Schema[E]
+
 type RecordSchema[V any] = record.Schema[V]
+
 type TextSchema = text.Schema
+
 type BooleanSchema = boolean.Schema
+
 type DateSchema = date.Schema
+
 type DurationSchema = duration.Schema
+
 type NumberSchema[N types.Number] = number.Schema[N]
 
-type Number = types.Number
+const CodeOneOf = combinator.CodeOneOf
 
 type CombinatorSchema[T any] = combinator.Schema[T]
 type AnyOfSchema[T any] = combinator.AnyOfSchema[T]
 type OneOfSchema[T any] = combinator.OneOfSchema[T]
-
-const CodeOneOf = combinator.CodeOneOf
 
 func WithFailFast(value bool) Option {
 	return schema.WithFailFast(value)

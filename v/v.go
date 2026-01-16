@@ -165,7 +165,7 @@ func Duration() *duration.Schema {
 	return schemaValue
 }
 
-func NumberSchemaOf[N types.Number]() *number.Schema[N] {
+func Number[N types.Number]() *number.Schema[N] {
 	schemaValue := number.New[N]()
 	registry.Register(schemaValue)
 	return schemaValue

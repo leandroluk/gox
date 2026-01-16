@@ -65,14 +65,14 @@
 
     func main() {
         schema := v.Object(func(u *User, s *v.ObjectSchema[User]) {
-            s.Field(&u.Name, func(ctx *v.Context, value any) (any, bool) {
+            s.Field(&u.Name, func(ctx *v.Context, value any) (any, error) {
                 return v.Text().
                     Required().
                     Min(3).
                     ValidateAny(value, ctx.Options)
             })
 
-            s.Field(&u.Age, func(ctx *v.Context, value any) (any, bool) {
+            s.Field(&u.Age, func(ctx *v.Context, value any) (any, error) {
                 return v.NumberSchemaOf[int]().
                     Min(0).
                     Max(130).

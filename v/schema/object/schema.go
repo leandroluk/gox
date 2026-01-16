@@ -4,7 +4,6 @@ package object
 import (
 	"reflect"
 
-	"github.com/leandroluk/go/v/internal/ast"
 	"github.com/leandroluk/go/v/internal/defaults"
 	"github.com/leandroluk/go/v/internal/engine"
 	"github.com/leandroluk/go/v/internal/ruleset"
@@ -84,7 +83,7 @@ func (s *Schema[T]) Custom(ruleValue ruleset.RuleFn[T]) *Schema[T] {
 	return s
 }
 
-func (s *Schema[T]) Field(fieldPointer any, validator func(context *engine.Context, value ast.Value) (any, bool)) *Schema[T] {
+func (s *Schema[T]) Field(fieldPointer any, validator func(context *engine.Context, value any) (any, bool)) *Schema[T] {
 	if s == nil {
 		return s
 	}

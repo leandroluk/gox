@@ -56,7 +56,7 @@ func TestObject_TypeMismatchMeta(t *testing.T) {
 func TestObject_StructOnly_DoesNotValidateFieldsOrFieldConditions(t *testing.T) {
 	s := object.New(func(target *Sample, schemaValue *object.Schema[Sample]) {
 		schemaValue.
-			Field(&target.Name, func(context *engine.Context, value ast.Value) (any, bool) {
+			Field(&target.Name, func(context *engine.Context, value any) (any, bool) {
 				stop := context.AddIssue("field.validator", "should not run")
 				return "", stop
 			}).
@@ -81,14 +81,15 @@ func TestObject_StructOnly_DoesNotValidateFieldsOrFieldConditions(t *testing.T) 
 
 func TestObject_NoStructLevel_ValidatesFieldsButSkipsObjectRules(t *testing.T) {
 	s := object.New(func(target *Sample, schemaValue *object.Schema[Sample]) {
-		schemaValue.Field(&target.Name, func(context *engine.Context, value ast.Value) (any, bool) {
-			if value.Kind != ast.KindString {
+		schemaValue.Field(&target.Name, func(context *engine.Context, value any) (any, bool) {
+			v := value.(ast.Value)
+
+			if v.Kind != ast.KindString {
 				stop := context.AddIssue("field.validator", "invalid")
 				return "", stop
 			}
-			return value.String, false
+			return v.String, false
 		})
-
 		schemaValue.Custom(func(value Sample, reporter ruleset.Reporter) bool {
 			return reporter.AddIssue("struct.rule", "should not run")
 		})
@@ -119,12 +120,14 @@ type Cross struct {
 func TestObject_RequiredIf_DeepPathWithArrayIndex(t *testing.T) {
 	s := object.New(func(target *Sample, schemaValue *object.Schema[Sample]) {
 		schemaValue.
-			Field(&target.Name, func(context *engine.Context, value ast.Value) (any, bool) {
-				if value.Kind != ast.KindString {
+			Field(&target.Name, func(context *engine.Context, value any) (any, bool) {
+				v := value.(ast.Value)
+
+				if v.Kind != ast.KindString {
 					stop := context.AddIssue("field.type", "invalid")
 					return "", stop
 				}
-				return value.String, false
+				return v.String, false
 			}).
 			RequiredIf("meta.items[0].flag", rule.OpEq, true)
 	})
@@ -243,7 +246,7 @@ func TestObject_SkipUnless_SkipsFieldValidationWhenNotMet(t *testing.T) {
 
 	s := object.New(func(target *SkipUnless, schemaValue *object.Schema[SkipUnless]) {
 		schemaValue.
-			Field(&target.A, func(context *engine.Context, value ast.Value) (any, bool) {
+			Field(&target.A, func(context *engine.Context, value any) (any, bool) {
 				called = true
 				stop := context.AddIssue("should.not.run", "boom")
 				return "", stop

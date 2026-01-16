@@ -25,11 +25,11 @@ type field[T any] struct {
 
 	comparators []rule.Comparator
 
-	validate func(context *engine.Context, value ast.Value) (any, bool)
+	validate func(context *engine.Context, value any) (any, bool)
 	assign   func(outputPointer unsafe.Pointer, value any)
 }
 
-func newField[T any](structPointer *T, fieldPointer any, validator func(context *engine.Context, value ast.Value) (any, bool)) (field[T], error) {
+func newField[T any](structPointer *T, fieldPointer any, validator func(context *engine.Context, value any) (any, bool)) (field[T], error) {
 	if structPointer == nil {
 		return field[T]{}, fmt.Errorf("nil target")
 	}
@@ -83,11 +83,32 @@ func newField[T any](structPointer *T, fieldPointer any, validator func(context 
 
 	fieldType := matched.Type
 
-	validateFn := func(context *engine.Context, value ast.Value) (any, bool) {
-		if validator == nil {
-			return decodeFallback(context, value, fieldType)
+	validateFn := func(context *engine.Context, value any) (any, bool) {
+		if validator != nil {
+			return validator(context, value)
 		}
-		return validator(context, value)
+
+		astValue, ok := value.(ast.Value)
+		if ok {
+			return decodeFallback(context, astValue, fieldType)
+		}
+
+		astValuePointer, ok := value.(*ast.Value)
+		if ok {
+			if astValuePointer == nil {
+				return decodeFallback(context, ast.NullValue(), fieldType)
+			}
+			return decodeFallback(context, *astValuePointer, fieldType)
+		}
+
+		astValue, err := engine.InputToASTWithOptions(value, context.Options)
+		if err != nil {
+			stop := context.AddIssueWithMeta(CodeFieldDecode, "invalid field", map[string]any{
+				"error": err.Error(),
+			})
+			return reflect.Zero(fieldType).Interface(), stop
+		}
+		return decodeFallback(context, astValue, fieldType)
 	}
 
 	assignFn := func(outputPointer unsafe.Pointer, value any) {

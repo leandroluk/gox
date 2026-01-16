@@ -12,10 +12,6 @@ import (
 	"github.com/leandroluk/go/v/schema/record/rule"
 )
 
-type AnySchema interface {
-	ValidateAny(input any, options schema.Options) (any, error)
-}
-
 type KeysFunc func(context *engine.Context, key string) bool
 
 type ValuesFunc[V any] func(context *engine.Context, value ast.Value) (V, bool)
@@ -26,10 +22,10 @@ type Schema[V any] struct {
 
 	unique bool
 
-	keySchema AnySchema
+	keySchema schema.AnySchema
 	keyFunc   KeysFunc
 
-	valueSchema AnySchema
+	valueSchema schema.AnySchema
 	valueFunc   ValuesFunc[V]
 
 	defaultProvider defaults.Provider[map[string]V]
@@ -106,7 +102,7 @@ func (schemaValue *Schema[V]) Unique() *Schema[V] {
 	return schemaValue
 }
 
-func (schemaValue *Schema[V]) Keys(schemaValueKey AnySchema) *Schema[V] {
+func (schemaValue *Schema[V]) Keys(schemaValueKey schema.AnySchema) *Schema[V] {
 	schemaValue.keySchema = schemaValueKey
 	schemaValue.keyFunc = nil
 	return schemaValue
@@ -122,7 +118,7 @@ func (schemaValue *Schema[V]) EndKeys() *Schema[V] {
 	return schemaValue
 }
 
-func (schemaValue *Schema[V]) Dive(schemaValueItem AnySchema) *Schema[V] {
+func (schemaValue *Schema[V]) Dive(schemaValueItem schema.AnySchema) *Schema[V] {
 	schemaValue.valueSchema = schemaValueItem
 	schemaValue.valueFunc = nil
 	return schemaValue

@@ -1,102 +1,99 @@
-// oas/oas.go
+// Package oas provides type-safe OpenAPI 3.1 document construction with a fluent API.
+//
+// This package offers a comprehensive, ergonomic way to build OpenAPI specifications
+// programmatically in Go, featuring:
+//
+//   - 100% fluent API with void callbacks for hierarchical construction
+//   - Type-safe enumerations for common values (content types, schema types)
+//   - Automatic validation of required fields during JSON marshaling
+//   - Full support for both marshaling (to JSON) and unmarshaling (from JSON)
+//   - NestJS-style security helpers for common authentication patterns
+//   - Schema type helpers for reduced verbosity (.String(), .Object(), etc.)
+//   - Content type helpers for common media types (.Json(), .Xml(), etc.)
+//
+// # Basic Usage
+//
+// Create a simple API document:
+//
+//	doc := types.New().
+//	    Info(func(i *types.Info) {
+//	        i.Title("My API").Version("1.0.0")
+//	    }).
+//	    Path("/users", func(p *types.Path) {
+//	        p.Get(func(o *types.Operation) {
+//	            o.Summary("List users").
+//	              Response("200", func(r *types.Response) {
+//	                  r.Description("Success")
+//	              })
+//	        })
+//	    })
+//
+// # Security Helpers
+//
+// Register security schemes and apply them to operations:
+//
+//	doc.WithBearerToken("bearer").
+//	    WithApiKey("api_key", "header")
+//
+//	operation.UseBearerToken("bearer", "read", "write")
+//
+// # Schema Type Helpers
+//
+// Use type helpers for concise schema definitions:
+//
+//	schema.String().MinLength(3).MaxLength(100)
+//	schema.Object().Required("id", "name")
+//	schema.Array().Items(func(s *Schema) { s.String() })
+//
+// # Validation
+//
+// All types automatically validate required fields during marshaling:
+//
+//	data, err := json.Marshal(doc)
+//	// Returns error if required fields are missing
+//
+// # Architecture
+//
+// The package is organized into sub-packages:
+//
+//   - types: Core OpenAPI types with fluent builders
+//   - enums: Type-safe enumerations (ContentType, SchemaType)
+//   - oas (root): Type aliases for backward compatibility
+//
+// For detailed examples and API reference, see the README.md file.
 package oas
 
-import (
-	"github.com/leandroluk/go/oas/builder"
-	"github.com/leandroluk/go/oas/types"
-)
+import "github.com/leandroluk/go/oas/types"
 
-type OpenAPI = types.OpenAPI
-type Info = types.Info
-type Contact = types.Contact
-type License = types.License
-type Server = types.Server
-type ServerVariable = types.ServerVariable
-type Paths = types.Paths
-type PathItem = types.PathItem
-type PathOperation = types.PathOperation
-type Parameter = types.Parameter
-type RequestBody = types.RequestBody
-type Response = types.Response
-type MediaType = types.MediaType
-type Encoding = types.Encoding
-type ExampleObject = types.ExampleObject
-type Header = types.Header
-type Link = types.Link
-type Callback = types.Callback
+// Type aliases for backward compatibility and cleaner imports.
+// All core functionality is implemented in the types sub-package.
+
+// Document represents an OpenAPI 3.1 document.
+type Document = types.Document
+
+// Path represents an OAS path item (endpoints at a specific path).
+type Path = types.Path
+
+// Operation represents an API operation (GET, POST, etc.).
+type Operation = types.Operation
+
+// Components holds reusable objects for different aspects of the OAS.
 type Components = types.Components
-type Tag = types.Tag
-type ExternalDocs = types.ExternalDocs
+
+// SecurityRequirement maps security scheme names to required scopes.
 type SecurityRequirement = types.SecurityRequirement
-type SecurityScheme = types.SecurityScheme
-type OAuthFlows = types.OAuthFlows
-type OAuthFlow = types.OAuthFlow
-type Discriminator = types.Discriminator
-type XML = types.XML
-type Schema = types.Schema
-type SchemaType = types.SchemaType
-type ContentType = types.ContentType
 
-const (
-	SchemaType_Object  = types.SchemaType_Object
-	SchemaType_String  = types.SchemaType_String
-	SchemaType_Integer = types.SchemaType_Integer
-	SchemaType_Number  = types.SchemaType_Number
-	SchemaType_Boolean = types.SchemaType_Boolean
-	SchemaType_Array   = types.SchemaType_Array
-	SchemaType_Null    = types.SchemaType_Null
-)
+// SecurityRequirements is a list of security requirement alternatives.
+type SecurityRequirements = types.SecurityRequirements
 
-const (
-	ContentType_ApplicationJson = types.ContentType_ApplicationJson
-	ContentType_TextPlain       = types.ContentType_TextPlain
-	ContentType_TextHtml        = types.ContentType_TextHtml
-	ContentType_TextXml         = types.ContentType_TextXml
-	ContentType_TextCsv         = types.ContentType_TextCsv
-	ContentType_ImageJpeg       = types.ContentType_ImageJpeg
-	ContentType_ImagePng        = types.ContentType_ImagePng
-	ContentType_ImageGif        = types.ContentType_ImageGif
-	ContentType_ImageSvg        = types.ContentType_ImageSvg
-	ContentType_ImageWebp       = types.ContentType_ImageWebp
-)
+// Callback represents a map of possible out-of-band callbacks related to the parent operation.
+type Callback = types.Callback
 
-type OpenAPIBuilder = builder.OpenAPIBuilder
-type PathItemBuilder = builder.PathItemBuilder
-type OperationBuilder = builder.OperationBuilder
-type ResponseBuilder = builder.ResponseBuilder
-type RequestBodyBuilder = builder.RequestBodyBuilder
-type ParameterBuilder = builder.ParameterBuilder
-type MediaTypeBuilder = builder.MediaTypeBuilder
-type SchemaBuilder = builder.SchemaBuilder
-type ContentBuilder = builder.ContentBuilder
-type HeaderBuilder = builder.HeaderBuilder
-type LinkBuilder = builder.LinkBuilder
-type ExampleObjectBuilder = builder.ExampleObjectBuilder
-type EncodingBuilder = builder.EncodingBuilder
-type Builder = *builder.OpenAPIBuilder
+// Callbacks represents a map of named callbacks.
+type Callbacks = types.Callbacks
 
-func New() Builder { return builder.New() }
-
-// Schema construtores por tipo
-var (
-	String  = builder.String
-	Integer = builder.Integer
-	Number  = builder.Number
-	Boolean = builder.Boolean
-	Array   = builder.Array
-	Object  = builder.Object
-	Ref     = builder.Ref
-)
-
-// Operation, RequestBody, Response e Parameter construtores
-var (
-	Operation       = builder.Operation // Renamed to avoid conflict with Operation type
-	Body            = builder.Body
-	ResponseCode    = builder.ResponseCode
-	ResponseRange   = builder.ResponseRange
-	ResponseDefault = builder.ResponseDefault
-	InPath          = builder.InPath
-	InQuery         = builder.InQuery
-	InHeader        = builder.InHeader
-	InCookie        = builder.InCookie
-)
+// New creates a new OpenAPI document with default values.
+// The document will have openapi set to "3.1.0" by default when marshaled.
+func New() *Document {
+	return types.New()
+}

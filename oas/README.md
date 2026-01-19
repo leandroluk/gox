@@ -14,92 +14,124 @@ go get github.com/leandroluk/go/oas
 package main
 
 import (
-    "encoding/json"
-    "os"
-    "github.com/leandroluk/go/oas"
+  "encoding/json"
+  "os"
+  "github.com/leandroluk/go/oas/types"
+  "github.com/leandroluk/go/oas/enums"
 )
 
 func main() {
-    api := oas.New().
-        Title("My API").
-        Version("1.0.0")
+  doc := types.New().
+    OpenAPI("3.1.0").
+    Info(func(i *types.Info) {
+      i.Title("My API").Version("1.0.0")
+    }).
+    Path("/users", func(p *types.Path) {
+      p.Get(func(o *types.Operation) {
+        o.Summary("List users").
+          Response("200", func(r *types.Response) {
+            r.Description("Success").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Array().Items(func(item *types.Schema) {
+                    item.Object().
+                      Property("id", func(id *types.Schema) { id.String() }).
+                      Property("name", func(name *types.Schema) { name.String() })
+                  })
+                })
+              })
+          })
+      })
+    })
 
-    api.ComponentSchema("User",
-        oas.Object().
-            Required("id", "name").
-            Property("id", oas.String().Example("usr_123")).
-            Property("name", oas.String().MinLength(1)),
-    )
-
-    api.Path("/users").Get(
-        oas.Operation("listUsers").
-            Summary("List users").
-            Responses(
-                oas.ResponseCode(200).
-                    Description("Success").
-                    ContentJSON(
-                        oas.Array().Items(oas.Ref("#/components/schemas/User"))
-                    ),
-            ),
-    )
-
-    json.NewEncoder(os.Stdout).Encode(api)
+  json.NewEncoder(os.Stdout).Encode(doc)
 }
 ```
 
-## Core Features
+## ✨ Key Features
 
-### ✅ 100% Fluent API
-Zero callbacks, pure method chaining:
+### 🎯 Fluent API with Void Callbacks
+
+The entire API uses **void callbacks** for hierarchical construction:
 
 ```go
-oas.Operation("createUser").
-    RequestBody(oas.Body().ContentJSON(...)).
-    Responses(
-        oas.ResponseCode(201).Description("Created"),
-        oas.ResponseCode(400).Description("Invalid"),
-    )
+doc.Path("/products", func(p *types.Path) {
+    p.Post(func(o *types.Operation) {
+        o.Summary("Create product").
+          RequestBody(func(rb *types.RequestBody) {
+              rb.Json(func(m *types.MediaType) {
+                  m.Schema(func(s *types.Schema) {
+                      s.Object()
+                  })
+              })
+          })
+    })
+})
 ```
 
-### ✅ Type-Safe Schema Builders
+### 🔐 Security Helpers (NestJS-style)
+
+Declare schemes globally and use them in operations:
 
 ```go
-oas.String()    // string type
-oas.Integer()   // integer type
-oas.Number()    // number type
-oas.Boolean()   // boolean type
-oas.Array()     // array type
-oas.Object()    // object type
-oas.Ref(path)   // $ref to component
+// Document: register schemes
+doc.WithBearerToken("bearer").
+    WithApiKey("api_key", "header")
+
+// Operation: use the schemes
+operation.UseBearerToken("bearer", "read", "write").
+          UseApiKey("api_key")
 ```
 
-### ✅ Fluent Validation
+### 🏗️ Schema Helpers
+
+Fluent methods for common types:
 
 ```go
-oas.String().
-    MinLength(1).
-    MaxLength(100).
-    Pattern("^[a-zA-Z]+$").
-    Format("email")
-
-oas.Integer().
-    Minimum(0).
-    Maximum(100)
-
-oas.Array().
-    MinItems(1).
-    UniqueItems(true).
-    Items(oas.String())
+schema.String()   // .Type(enums.SchemaString)
+schema.Object()   // .Type(enums.SchemaObject)
+schema.Array()    // .Type(enums.SchemaArray)
+schema.Integer()  // .Type(enums.SchemaInteger)
+schema.Number()   // .Type(enums.SchemaNumber)
+schema.Boolean()  // .Type(enums.SchemaBoolean)
+schema.Null()     // .Type(enums.SchemaNull)
 ```
 
-### ✅ Clean Property Definition
+### 📦 Content Type Helpers
+
+Reduce verbosity for common content types:
 
 ```go
-oas.Object().
-    Required("id", "email").
-    Property("id", oas.String().Format("uuid")).
-    Property("email", oas.String().Format("email")).
-    Property("age", oas.Integer().Minimum(18))
+response.Json(func(m *types.MediaType) { ... })      // application/json
+response.Xml(func(m *types.MediaType) { ... })       // text/xml
+response.Html(func(m *types.MediaType) { ... })      // text/html
+response.Plain(func(m *types.MediaType) { ... })     // text/plain
+
+requestBody.Form(func(m *types.MediaType) { ... })       // x-www-form-urlencoded
+requestBody.Multipart(func(m *types.MediaType) { ... })  // multipart/form-data
+```
+
+### ✅ Automatic Validation
+
+All types validate required fields in `MarshalJSON`:
+
+```go
+doc := types.New()
+// Without .Info() set
+json.Marshal(doc) // ❌ Error: "Document.info is required"
+```
+
+### 🔄 Marshal + Unmarshal
+
+Full support for serialization and parsing:
+
+```go
+// Marshal
+data, _ := json.Marshal(doc)
+
+// Unmarshal
+var parsed types.Document
+json.Unmarshal(data, &parsed)
 ```
 
 ## Complete Example: E-Commerce API
@@ -108,319 +140,727 @@ oas.Object().
 package main
 
 import (
-    "encoding/json"
-    "os"
-    "github.com/leandroluk/go/oas"
+  "encoding/json"
+  "os"
+
+  "github.com/leandroluk/go/oas/enums"
+  "github.com/leandroluk/go/oas/types"
 )
 
 func main() {
-    api := oas.New().
-        Title("E-Commerce API").
-        Description("Complete REST API for e-commerce platform").
-        Version("2.0.0")
+  doc := types.New().
+    OpenAPI("3.1.0").
+    Info(func(i *types.Info) {
+      i.Title("E-Commerce Platform API").
+        Version("2.0.0").
+        Description("Complete REST API for managing products, orders, and customers").
+        Contact().Name("API Team").Email("api@ecommerce.com").URL("https://ecommerce.com")
+      i.License().Name("MIT").URL("https://opensource.org/licenses/MIT")
+    }).
+    // Security Schemes
+    WithBearerToken("bearer").
+    WithApiKey("api_key", "header").
+    // Servers
+    Server("https://api.ecommerce.com/v2", func(s *types.Server) {
+      s.Description("Production").
+        Variable("env", func(v *types.ServerVariable) {
+          v.Default("production").
+            Enum("production", "staging").
+            Description("Environment")
+        })
+    }).
+    Server("http://localhost:3000", func(s *types.Server) {
+      s.Description("Development")
+    }).
+    // Tags
+    Tag("Products", func(t *types.Tag) {
+      t.Description("Product catalog management").
+        ExternalDoc("https://docs.ecommerce.com/products")
+    }).
+    Tag("Orders").      // Optional callback - just the name
+    Tag("Customers").   // Optional callback - just the name
+    // Components - Schemas
+    Components(func(c *types.Components) {
+      // Product schema
+      c.Schema("Product", func(s *types.Schema) {
+        s.Object().
+          Required("id", "name", "price", "stock").
+          Property("id", func(p *types.Schema) {
+            p.String().
+              Format("uuid").
+              Example("550e8400-e29b-41d4-a716-446655440000").
+              Description("Unique product identifier")
+          }).
+          Property("name", func(p *types.Schema) {
+            p.String().
+              MinLength(3).
+              MaxLength(200).
+              Example("Wireless Bluetooth Headphones").
+              Description("Product display name")
+          }).
+          Property("description", func(p *types.Schema) {
+            p.String().
+              MaxLength(2000).
+              Example("Premium noise-cancelling headphones with 30-hour battery life")
+          }).
+          Property("price", func(p *types.Schema) {
+            p.Number().
+              Minimum(0.01).
+              Example(149.99).
+              Description("Price in USD")
+          }).
+          Property("stock", func(p *types.Schema) {
+            p.Integer().
+              Minimum(0).
+              Example(245).
+              Description("Available inventory")
+          }).
+          Property("category", func(p *types.Schema) {
+            p.String().Example("electronics")
+          }).
+          Property("tags", func(p *types.Schema) {
+            p.Array().
+              Items(func(item *types.Schema) { item.String() }).
+              Example([]string{"audio", "wireless", "premium"})
+          }).
+          Property("active", func(p *types.Schema) {
+            p.Boolean().Default(true)
+          }).
+          Property("images", func(p *types.Schema) {
+            p.Array().
+              MaxItems(10).
+              Items(func(item *types.Schema) {
+                item.Object().
+                  Property("url", func(u *types.Schema) { u.String().Format("uri") }).
+                  Property("alt", func(a *types.Schema) { a.String() })
+              })
+          }).
+          Property("createdAt", func(p *types.Schema) {
+            p.String().Format("date-time").ReadOnly(true)
+          }).
+          Property("updatedAt", func(p *types.Schema) {
+            p.String().Format("date-time").ReadOnly(true)
+          })
+      })
 
-    // Product schema
-    api.ComponentSchema("Product",
-        oas.Object().
-            Required("id", "name", "price", "stock").
-            Property("id", oas.String().Format("uuid").Example("550e8400-e29b-41d4-a716-446655440000")).
-            Property("name", oas.String().MinLength(3).MaxLength(100).Example("Wireless Mouse")).
-            Property("description", oas.String().MaxLength(500)).
-            Property("price", oas.Number().Minimum(0.01).Example(29.99)).
-            Property("stock", oas.Integer().Minimum(0).Example(150)).
-            Property("category", oas.Ref("#/components/schemas/Category")).
-            Property("tags", oas.Array().Items(oas.String())).
-            Property("active", oas.Boolean().Default(true)),
-    )
+      // ProductInput schema
+      c.Schema("ProductInput", func(s *types.Schema) {
+        s.Object().
+          Required("name", "price").
+          Property("name", func(p *types.Schema) {
+            p.String().MinLength(3).MaxLength(200)
+          }).
+          Property("description", func(p *types.Schema) {
+            p.String().MaxLength(2000)
+          }).
+          Property("price", func(p *types.Schema) {
+            p.Number().Minimum(0.01)
+          }).
+          Property("stock", func(p *types.Schema) {
+            p.Integer().Minimum(0).Default(0)
+          }).
+          Property("category", func(p *types.Schema) { p.String() }).
+          Property("tags", func(p *types.Schema) {
+            p.Array().Items(func(item *types.Schema) { item.String() })
+          })
+      })
 
-    // Category schema
-    api.ComponentSchema("Category",
-        oas.Object().
-            Required("id", "name").
-            Property("id", oas.String().Example("cat_electronics")).
-            Property("name", oas.String().Example("Electronics")).
-            Property("parent", oas.String()),
-    )
+      // Order schema
+      c.Schema("Order", func(s *types.Schema) {
+        s.Object().
+          Required("id", "customerId", "items", "total", "status").
+          Property("id", func(p *types.Schema) { p.String().Format("uuid") }).
+          Property("customerId", func(p *types.Schema) { p.String().Format("uuid") }).
+          Property("items", func(p *types.Schema) {
+            p.Array().
+              MinItems(1).
+              Items(func(item *types.Schema) {
+                item.Object().
+                  Required("productId", "quantity", "price").
+                  Property("productId", func(pi *types.Schema) { pi.String().Format("uuid") }).
+                  Property("quantity", func(q *types.Schema) { q.Integer().Minimum(1) }).
+                  Property("price", func(pr *types.Schema) { pr.Number() })
+              })
+          }).
+          Property("total", func(p *types.Schema) { p.Number() }).
+          Property("status", func(p *types.Schema) {
+            p.String().Enum("pending", "paid", "shipped", "delivered", "cancelled")
+          }).
+          Property("createdAt", func(p *types.Schema) { p.String().Format("date-time") })
+      })
 
-    // Product input (for creation)
-    api.ComponentSchema("ProductInput",
-        oas.Object().
-            Required("name", "price").
-            Property("name", oas.String().MinLength(3).MaxLength(100)).
-            Property("description", oas.String().MaxLength(500)).
-            Property("price", oas.Number().Minimum(0.01)).
-            Property("stock", oas.Integer().Minimum(0).Default(0)).
-            Property("categoryId", oas.String()).
-            Property("tags", oas.Array().Items(oas.String())),
-    )
+      // Error schema
+      c.Schema("Error", func(s *types.Schema) {
+        s.Object().
+          Required("error", "message").
+          Property("error", func(p *types.Schema) {
+            p.String().Example("VALIDATION_ERROR")
+          }).
+          Property("message", func(p *types.Schema) {
+            p.String().Example("Invalid request parameters")
+          }).
+          Property("details", func(p *types.Schema) {
+            p.Array().
+              Items(func(item *types.Schema) {
+                item.Object().
+                  Property("field", func(f *types.Schema) { f.String() }).
+                  Property("issue", func(i *types.Schema) { i.String() })
+              })
+          })
+      })
 
-    // Error response
-    api.ComponentSchema("Error",
-        oas.Object().
-            Required("error", "message").
-            Property("error", oas.String().Example("INVALID_INPUT")).
-            Property("message", oas.String().Example("Validation failed")).
-            Property("details", oas.Array().Items(
-                oas.Object().
-                    Property("field", oas.String()).
-                    Property("issue", oas.String()),
-            )),
-    )
+      // Pagination schema
+      c.Schema("PaginatedProducts", func(s *types.Schema) {
+        s.Object().
+          Property("data", func(p *types.Schema) {
+            p.Array().Items(func(item *types.Schema) {
+              item.Ref("#/components/schemas/Product")
+            })
+          }).
+          Property("meta", func(p *types.Schema) {
+            p.Object().
+              Property("page", func(pg *types.Schema) { pg.Integer() }).
+              Property("perPage", func(pp *types.Schema) { pp.Integer() }).
+              Property("total", func(t *types.Schema) { t.Integer() }).
+              Property("totalPages", func(tp *types.Schema) { tp.Integer() })
+          })
+      })
+    })
 
-    // LIST /products
-    api.Path("/products").Get(
-        oas.Operation("listProducts").
-            Summary("List products").
-            Description("Returns paginated list of products").
-            Tags("Products").
-            Parameters(
-                oas.InQuery("page", oas.Integer().Minimum(1).Default(1)),
-                oas.InQuery("perPage", oas.Integer().Minimum(1).Maximum(100).Default(20)),
-                oas.InQuery("category", oas.String()),
-                oas.InQuery("search", oas.String()),
-            ).
-            Responses(
-                oas.ResponseCode(200).
-                    Description("Successful response").
-                    ContentJSON(
-                        oas.Array().Items(oas.Ref("#/components/schemas/Product"))
-                    ),
-                oas.ResponseCode(400).
-                    Description("Invalid parameters").
-                    ContentJSON(oas.Ref("#/components/schemas/Error")),
-            ),
-    )
+  // Paths
+  doc.
+    // GET /products - List with pagination and filters
+    Path("/products", func(p *types.Path) {
+      p.Get(func(o *types.Operation) {
+        o.Summary("List products").
+          Description("Returns paginated list of products with optional filters").
+          Tags("Products").
+          Parameter(func(param *types.Parameter) {
+            param.Name("page").
+              In("query").
+              Description("Page number").
+              Schema(func(s *types.Schema) {
+                s.Integer().Minimum(1).Default(1)
+              })
+          }).
+          Parameter(func(param *types.Parameter) {
+            param.Name("perPage").
+              In("query").
+              Description("Items per page").
+              Schema(func(s *types.Schema) {
+                s.Integer().Minimum(1).Maximum(100).Default(20)
+              })
+          }).
+          Parameter(func(param *types.Parameter) {
+            param.Name("category").
+              In("query").
+              Schema(func(s *types.Schema) { s.String() })
+          }).
+          Parameter(func(param *types.Parameter) {
+            param.Name("search").
+              In("query").
+              Description("Search in name and description").
+              Schema(func(s *types.Schema) { s.String() })
+          }).
+          Response("200", func(r *types.Response) {
+            r.Description("Successful response").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/PaginatedProducts")
+                })
+              })
+          }).
+          Response("400", func(r *types.Response) {
+            r.Description("Invalid parameters").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/Error")
+                })
+              })
+          })
+      })
 
-    // CREATE /products
-    api.Path("/products").Post(
-        oas.Operation("createProduct").
-            Summary("Create product").
-            Tags("Products").
-            RequestBody(
-                oas.Body().
-                    Required(true).
-                    ContentJSON(oas.Ref("#/components/schemas/ProductInput"))
-            ).
-            Responses(
-                oas.ResponseCode(201).
-                    Description("Product created").
-                    ContentJSON(oas.Ref("#/components/schemas/Product")),
-                oas.ResponseCode(400).
-                    Description("Validation error").
-                    ContentJSON(oas.Ref("#/components/schemas/Error")),
-                oas.ResponseCode(409).Description("Product already exists"),
-            ),
-    )
-
+      // POST /products - Create product (requires auth)
+      p.Post(func(o *types.Operation) {
+        o.Summary("Create product").
+          Description("Creates a new product in the catalog").
+          Tags("Products").
+          UseBearerToken("bearer", "products:write").
+          RequestBody(func(rb *types.RequestBody) {
+            rb.Required(true).
+              Description("Product data").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/ProductInput")
+                })
+              }).
+              Xml(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/ProductInput")
+                })
+              })
+          }).
+          Response("201", func(r *types.Response) {
+            r.Description("Product created successfully").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/Product")
+                })
+              })
+          }).
+          Response("400", func(r *types.Response) {
+            r.Description("Validation error").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/Error")
+                })
+              })
+          }).
+          Response("401", func(r *types.Response) {
+            r.Description("Unauthorized")
+          }).
+          Response("409", func(r *types.Response) {
+            r.Description("Product already exists")
+          })
+      })
+    }).
     // GET /products/{id}
-    api.Path("/products/{id}").Get(
-        oas.Operation("getProduct").
-            Summary("Get product by ID").
-            Tags("Products").
-            Parameters(
-                oas.InPath("id", oas.String().Format("uuid")),
-            ).
-            Responses(
-                oas.ResponseCode(200).
-                    Description("Product found").
-                    ContentJSON(oas.Ref("#/components/schemas/Product")),
-                oas.ResponseCode(404).
-                    Description("Product not found").
-                    ContentJSON(oas.Ref("#/components/schemas/Error")),
-            ),
-    )
+    Path("/products/{id}", func(p *types.Path) {
+      p.Get(func(o *types.Operation) {
+        o.Summary("Get product by ID").
+          Tags("Products").
+          Parameter(func(param *types.Parameter) {
+            param.Name("id").
+              In("path").
+              Required(true).
+              Description("Product ID").
+              Schema(func(s *types.Schema) {
+                s.String().Format("uuid")
+              })
+          }).
+          Response("200", func(r *types.Response) {
+            r.Description("Product found").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/Product")
+                }).
+                Example(map[string]any{
+                  "id":          "550e8400-e29b-41d4-a716-446655440000",
+                  "name":        "Wireless Headphones",
+                  "description": "Premium quality",
+                  "price":       149.99,
+                  "stock":       245,
+                  "active":      true,
+                })
+              })
+          }).
+          Response("404", func(r *types.Response) {
+            r.Description("Product not found").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/Error")
+                })
+              })
+          })
+      })
 
-    // PATCH /products/{id}
-    api.Path("/products/{id}").Patch(
-        oas.Operation("updateProduct").
-            Summary("Update product").
-            Tags("Products").
-            Parameters(
-                oas.InPath("id", oas.String().Format("uuid")),
-            ).
-            RequestBody(
-                oas.Body().
-                    Required(true).
-                    ContentJSON(oas.Ref("#/components/schemas/ProductInput"))
-            ).
-            Responses(
-                oas.ResponseCode(200).
-                    Description("Updated successfully").
-                    ContentJSON(oas.Ref("#/components/schemas/Product")),
-                oas.ResponseCode(404).Description("Product not found"),
-            ),
-    )
+      // PATCH /products/{id} - Update (requires auth)
+      p.Patch(func(o *types.Operation) {
+        o.Summary("Update product").
+          Tags("Products").
+          UseBearerToken("bearer", "products:write").
+          Parameter(func(param *types.Parameter) {
+            param.Name("id").
+              In("path").
+              Required(true).
+              Schema(func(s *types.Schema) {
+                s.String().Format("uuid")
+              })
+          }).
+          RequestBody(func(rb *types.RequestBody) {
+            rb.Required(true).
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/ProductInput")
+                })
+              })
+          }).
+          Response("200", func(r *types.Response) {
+            r.Description("Updated successfully").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/Product")
+                })
+              })
+          }).
+          Response("404", func(r *types.Response) {
+            r.Description("Product not found")
+          }).
+          Response("401", func(r *types.Response) {
+            r.Description("Unauthorized")
+          })
+      })
 
-    // DELETE /products/{id}
-    api.Path("/products/{id}").Delete(
-        oas.Operation("deleteProduct").
-            Summary("Delete product").
-            Tags("Products").
-            Parameters(
-                oas.InPath("id", oas.String().Format("uuid")),
-            ).
-            Responses(
-                oas.ResponseCode(204).Description("Deleted successfully"),
-                oas.ResponseCode(404).Description("Product not found"),
-            ),
-    )
+      // DELETE /products/{id} - Delete (requires auth)
+      p.Delete(func(o *types.Operation) {
+        o.Summary("Delete product").
+          Tags("Products").
+          UseBearerToken("bearer", "products:delete").
+          Parameter(func(param *types.Parameter) {
+            param.Name("id").
+              In("path").
+              Required(true).
+              Schema(func(s *types.Schema) {
+                s.String().Format("uuid")
+              })
+          }).
+          Response("204", func(r *types.Response) {
+            r.Description("Deleted successfully")
+          }).
+          Response("404", func(r *types.Response) {
+            r.Description("Product not found")
+          }).
+          Response("401", func(r *types.Response) {
+            r.Description("Unauthorized")
+          })
+      })
+    }).
+    // POST /orders - Create order (requires auth)
+    Path("/orders", func(p *types.Path) {
+      p.Post(func(o *types.Operation) {
+        o.Summary("Create order").
+          Description("Creates a new order for the authenticated customer").
+          Tags("Orders").
+          UseBearerToken("bearer", "orders:create").
+          RequestBody(func(rb *types.RequestBody) {
+            rb.Required(true).
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Object().
+                    Required("items").
+                    Property("items", func(items *types.Schema) {
+                      items.Array().
+                        MinItems(1).
+                        Items(func(item *types.Schema) {
+                          item.Object().
+                            Required("productId", "quantity").
+                            Property("productId", func(id *types.Schema) {
+                              id.String().Format("uuid")
+                            }).
+                            Property("quantity", func(q *types.Schema) {
+                              q.Integer().Minimum(1).Maximum(100)
+                            })
+                        })
+                    })
+                })
+              })
+          }).
+          Response("201", func(r *types.Response) {
+            r.Description("Order created").
+              Json(func(m *types.MediaType) {
+                m.Schema(func(s *types.Schema) {
+                  s.Ref("#/components/schemas/Order")
+                })
+              })
+          }).
+          Response("400", func(r *types.Response) {
+            r.Description("Validation error")
+          }).
+          Response("401", func(r *types.Response) {
+            r.Description("Unauthorized")
+          })
+      })
+    })
 
-    json.NewEncoder(os.Stdout).Encode(api)
+  // Output
+  encoder := json.NewEncoder(os.Stdout)
+  encoder.SetIndent("", "  ")
+  if err := encoder.Encode(doc); err != nil {
+    panic(err)
+  }
 }
 ```
 
 ## API Reference
 
-### Schemas
+### Document
 
-#### Constructors
 ```go
-oas.String()    // Creates string schema
-oas.Integer()   // Creates integer schema
-oas.Number()    // Creates number schema
-oas.Boolean()   // Creates boolean schema
-oas.Array()     // Creates array schema
-oas.Object()    // Creates object schema
-oas.Ref(path)   // Creates $ref schema
+types.New().
+    OpenAPI(version).                              // Default: "3.1.0"
+    Info(func(i *Info) {}).   
+    Server(url, optionalBuild...).                 // Build callback is optional
+    Path(path, func(p *Path) {}).
+    Components(func(c *Components) {}).
+    Tag(name, optionalBuild...).                   // Build callback is optional
+    ExternalDocs(func(e *ExternalDocs) {}).
+    ExternalDoc(url, optionalBuild...).            // Shorthand with URL required
+    Security(name, scopes...)                      // Add global security requirement
 ```
 
-#### Validation Methods
+#### Optional Parameters Pattern
+
+Many methods support optional build callbacks using variadic parameters:
+
 ```go
-// String validation
-.MinLength(n)
-.MaxLength(n)
-.Pattern(regex)
-.Format("email" | "uuid" | "date" | "date-time" | ...)
+// With callback for configuration
+doc.Tag("Products", func(t *Tag) {
+    t.Description("Product management")
+})
 
-// Number validation
-.Minimum(n)
-.Maximum(n)
-.ExclusiveMinimum(bool)
-.ExclusiveMaximum(bool)
-.MultipleOf(n)
+// Without callback - just the required parameter
+doc.Tag("Orders")
+doc.Tag("Customers")
 
-// Array validation
-.MinItems(n)
-.MaxItems(n)
-.UniqueItems(bool)
-.Items(schema)
+// Server with optional configuration
+doc.Server("https://api.example.com")
+doc.Server("http://localhost:3000", func(s *Server) {
+    s.Description("Development")
+})
 
-// Object validation
-.Required(fields...)
-.Property(name, schema)
-.AdditionalProperties(val)
+// ExternalDoc with optional description
+doc.ExternalDoc("https://docs.example.com")
+doc.ExternalDoc("https://docs.example.com", func(e *ExternalDocs) {
+    e.Description("Complete API documentation")
+})
+```
 
-// Common
-.Example(val)
-.Default(val)
-.Description(text)
-.ReadOnly(bool)
-.WriteOnly(bool)
-.Deprecated(bool)
+#### Security Helpers
+```go
+doc.WithBearerToken(name)                              // Register Bearer JWT scheme
+doc.WithApiKey(name, in)                               // Register API Key (header/query/cookie)
+doc.WithSecurityScheme(name, func(s *SecurityScheme) {})  // Custom security scheme
+```
+
+### Operation
+
+```go
+operation.
+    Summary(text).
+    Description(text).
+    Tags(tags...).
+    OperationId(id).
+    Deprecated(bool).
+    Parameter(func(p *Parameter) {}).
+    RequestBody(func(rb *RequestBody) {}).
+    Response(code, func(r *Response) {}).
+    ExternalDocs(func(e *ExternalDocs) {}).
+    ExternalDoc(url, optionalBuild...).          // Shorthand with URL required
+    Server(url, optionalBuild...)                // Server override (optional callback)
+```
+
+#### Security Helpers
+```go
+operation.UseBearerToken(name, scopes...)           // Apply Bearer auth
+operation.UseApiKey(name)                           // Apply API key
+operation.UseSecurityScheme(name, scopes...)        // Custom security requirement
+```
+
+### Schema
+
+#### Type Helpers
+```go
+schema.String()    // Sets type to "string"
+schema.Object()    // Sets type to "object"
+schema.Array()     // Sets type to "array"
+schema.Integer()   // Sets type to "integer"
+schema.Number()    // Sets type to "number"
+schema.Boolean()   // Sets type to "boolean"
+schema.Null()      // Sets type to "null"
+```
+
+#### String Validation
+```go
+schema.MinLength(n).
+       MaxLength(n).
+       Pattern(regex).
+       Format("email" | "uuid" | "uri" | "date" | "date-time" | ...)
+```
+
+#### Number Validation
+```go
+schema.Minimum(n).
+       Maximum(n).
+       ExclusiveMinimum(bool).
+       ExclusiveMaximum(bool).
+       MultipleOf(n)
+```
+
+#### Array Validation
+```go
+schema.MinItems(n).
+       MaxItems(n).
+       UniqueItems(bool).
+       Items(func(s *Schema) {})
+```
+
+#### Object Structure
+```go
+schema.Required(fields...).
+       Property(name, func(s *Schema) {}).
+       AdditionalProperties(value).
+       MinProperties(n).
+       MaxProperties(n)
 ```
 
 #### Composition
 ```go
-.AllOf(schemas...)  // Must match all
-.OneOf(schemas...)  // Must match exactly one
-.AnyOf(schemas...)  // Must match at least one
+schema.AllOf(func(s *Schema) {}).   // Must match all schemas
+schema.OneOf(func(s *Schema) {}).   // Must match exactly one
+schema.AnyOf(func(s *Schema) {}).   // Must match at least one
+schema.Not(func(s *Schema) {})      // Must NOT match schema
 ```
 
-### Operations
-
+#### Metadata
 ```go
-oas.Operation(operationId).
-    Summary(text).
-    Description(text).
-    Tags(tags...).
-    Parameters(params...).
-    RequestBody(body).
-    Responses(responses...)
+schema.Title(text).
+       Description(text).
+       Example(value).
+       Default(value).
+       ReadOnly(bool).
+       WriteOnly(bool).
+       Deprecated(bool)
 ```
 
-### Parameters
+### Response & RequestBody
 
+#### Content Type Helpers
 ```go
-oas.InPath(name, schema)    // Path parameter (auto-required)
-oas.InQuery(name, schema)   // Query parameter
-oas.InHeader(name, schema)  // Header parameter
-oas.InCookie(name, schema)  // Cookie parameter
+// Response
+response.Json(func(m *MediaType) {})       // application/json
+response.Xml(func(m *MediaType) {})        // text/xml
+response.Html(func(m *MediaType) {})       // text/html
+response.Plain(func(m *MediaType) {})      // text/plain
+
+// RequestBody
+requestBody.Json(func(m *MediaType) {})       // application/json
+requestBody.Xml(func(m *MediaType) {})        // text/xml
+requestBody.Form(func(m *MediaType) {})       // application/x-www-form-urlencoded
+requestBody.Multipart(func(m *MediaType) {})  // multipart/form-data
 ```
 
-All parameters support:
+#### Generic Content
 ```go
-.Required(bool)
-.Description(text)
-.Example(val)
-.Deprecated(bool)
+response.Content(enums.ContentJson, func(m *MediaType) {})
+requestBody.Content(enums.ContentXml, func(m *MediaType) {})
 ```
 
-### Request Body
+### Parameter
 
 ```go
-oas.Body().
-    Required(bool).
-    Description(text).
-    ContentJSON(schema)    // application/json
+parameter.Name(name).
+          In("query" | "header" | "path" | "cookie").
+          Required(bool).
+          Description(text).
+          Schema(func(s *Schema) {}).
+          Example(value).
+          Deprecated(bool).
+          AllowEmptyValue(bool).    // query/cookie only
+          AllowReserved(bool)       // query only
 ```
 
-### Responses
+### Components
 
 ```go
-oas.ResponseCode(200)      // Exact code: "200"
-oas.ResponseRange(2)       // Range: "2XX"
-oas.ResponseDefault()      // Default: "default"
-```
-
-All responses support:
-```go
-.Description(text)         // Required
-.ContentJSON(schema)       // application/json
-```
-
-### JSON Marshaling
-
-All builders implement `json.Marshaler`:
-
-```go
-api := oas.New().Title("API").Version("1.0.0")
-json.Marshal(api)  // ✅ Works directly!
-
-schema := oas.Object().Property("id", oas.String())
-json.Marshal(schema)  // ✅ Works!
+components.
+    Schema(name, func(s *Schema) {}).
+    Response(name, func(r *Response) {}).
+    Parameter(name, func(p *Parameter) {}).
+    Example(name, func(e *ExampleObject) {}).
+    RequestBody(name, func(rb *RequestBody) {}).
+    Header(name, func(h *Header) {}).
+    SecurityScheme(name, func(ss *SecurityScheme) {}).
+    Link(name, func(l *Link) {}).
+    Callback(name, func(cb Callback) {}).
+    Path(name, func(p *Path) {})
 ```
 
 ## Best Practices
 
 ### 1. Component Reuse
-Define common schemas in components:
-```go
-api.ComponentSchema("Error", ...)
-api.ComponentSchema("PaginationMeta", ...)
+Define common schemas in components and reference them:
 
-// Reuse via $ref
-oas.Ref("#/components/schemas/Error")
+```go
+doc.Components(func(c *Components) {
+    c.Schema("Error", func(s *Schema) {
+        s.Object().
+          Required("error", "message").
+          Property("error", func(p *Schema) { p.String() }).
+          Property("message", func(p *Schema) { p.String() })
+    })
+})
+
+// Reference with $ref
+schema.Ref("#/components/schemas/Error")
 ```
 
-### 2. Input/Output Separation
+### 2. Separate Input/Output Schemas
 ```go
-api.ComponentSchema("UserInput", ...)  // For POST/PATCH (without id, timestamps)
-api.ComponentSchema("User", ...)       // For responses (with id, createdAt, etc.)
+c.Schema("ProductInput", ...)  // POST/PATCH (no id, timestamps)
+c.Schema("Product", ...)       // Responses (with id, createdAt, updatedAt)
 ```
 
-### 3. Validation Constraints
-Always add reasonable constraints:
+### 3. Add Validation Constraints
+Always add reasonable validation to prevent abuse:
+
 ```go
-oas.String().MinLength(1).MaxLength(255)  // Not unlimited
-oas.Integer().Minimum(0)                  // Non-negative
-oas.Array().MaxItems(100)                 // Prevent abuse
+schema.String().MinLength(1).MaxLength(255)  // Not unlimited
+schema.Integer().Minimum(0)                  // Non-negative
+schema.Array().MaxItems(100)                 // Prevent abuse
 ```
 
-### 4. Use Descriptive IDs
+### 4. Use Descriptive Operation IDs
 ```go
-oas.Operation("createUser")    // ✅ Clear
-oas.Operation("create")        // ❌ Ambiguous
+operation.OperationId("createUser")    // ✅ Clear and specific
+operation.OperationId("create")        // ❌ Ambiguous
 ```
+
+### 5. Leverage Automatic Validation
+```go
+// Validation happens automatically during marshaling
+data, err := json.Marshal(doc)
+if err != nil {
+    // Handle validation errors
+    log.Fatal(err)
+}
+```
+
+### 6. Security Best Practices
+```go
+// Register schemes once at document level
+doc.WithBearerToken("bearer").
+    WithApiKey("api_key", "header")
+
+// Apply to specific operations
+operation.UseBearerToken("bearer", "read", "write")
+
+// Multiple schemes for an operation
+operation.UseBearerToken("bearer").UseApiKey("api_key")
+```
+
+## Features
+
+- ✅ **100% Fluent API** with void callbacks for intuitive hierarchy
+- ✅ **Type-Safe** with strongly-typed enums
+- ✅ **Automatic Validation** during JSON marshaling
+- ✅ **Full Marshal + Unmarshal** support
+- ✅ **Security Helpers** inspired by NestJS decorators
+- ✅ **Schema Type Helpers** (.String(), .Object(), etc.)
+- ✅ **Content Type Helpers** (.Json(), .Xml(), .Form(), etc.)
+- ✅ **OpenAPI 3.1 Compliant** with default value handling
+- ✅ **Zero External Dependencies**
+- ✅ **Reuse-if-Exists** pattern for map builders
+- ✅ **Comprehensive godoc** documentation
+
+## Architecture
+
+The package is organized into three main sub-packages:
+
+- **`types`** - Core OpenAPI types with fluent builders
+- **`enums`** - Type-safe enumerations (ContentType, SchemaType)
+- **`oas`** (root) - Type aliases for backward compatibility
+
+All types implement `json.Marshaler` and `json.Unmarshaler` for seamless JSON integration.
 
 ## License
 

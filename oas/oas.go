@@ -74,9 +74,9 @@ type LinkBuilder = builder.LinkBuilder
 type ExampleObjectBuilder = builder.ExampleObjectBuilder
 type EncodingBuilder = builder.EncodingBuilder
 
-func New() *builder.OpenAPIBuilder {
-	return builder.New()
-}
+func New() *builder.OpenAPIBuilder { return builder.New() }
+
+type NewBuilder = *builder.OpenAPIBuilder
 
 // Schema construtores por tipo
 var (
@@ -91,7 +91,7 @@ var (
 
 // Operation, RequestBody, Response e Parameter construtores
 var (
-	Op              = builder.Operation // Renamed to avoid conflict with Operation type
+	Operation       = builder.Operation // Renamed to avoid conflict with Operation type
 	Body            = builder.Body
 	ResponseCode    = builder.ResponseCode
 	ResponseRange   = builder.ResponseRange

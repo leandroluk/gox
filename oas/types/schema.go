@@ -88,6 +88,16 @@ func (s *Schema) Null() *Schema {
 	return s.Type(enums.SchemaNull)
 }
 
+func (s *Schema) Nullable() *Schema {
+	for _, t := range s.type_ {
+		if t == enums.SchemaNull {
+			return s
+		}
+	}
+	s.type_ = append(s.type_, enums.SchemaNull)
+	return s
+}
+
 func (s *Schema) Format(value string) *Schema {
 	s.format = &value
 	return s

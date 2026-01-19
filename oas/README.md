@@ -667,6 +667,10 @@ schema.Integer()   // Sets type to "integer"
 schema.Number()    // Sets type to "number"
 schema.Boolean()   // Sets type to "boolean"
 schema.Null()      // Sets type to "null"
+
+// Nullable Types (OAS 3.1)
+schema.String().Nullable()   // type: ["string", "null"]
+schema.Integer().Nullable()  // type: ["integer", "null"]
 ```
 
 #### String Validation

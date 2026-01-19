@@ -136,6 +136,22 @@ func newField[T any](structPointer *T, fieldPointer any, validator func(context 
 			return
 		}
 
+		if fieldType.Kind() == reflect.Pointer {
+			elemType := fieldType.Elem()
+			if v.Type().AssignableTo(elemType) {
+				ptr := reflect.New(elemType)
+				ptr.Elem().Set(v)
+				target.Set(ptr)
+				return
+			}
+			if v.Type().ConvertibleTo(elemType) {
+				ptr := reflect.New(elemType)
+				ptr.Elem().Set(v.Convert(elemType))
+				target.Set(ptr)
+				return
+			}
+		}
+
 		target.Set(reflect.Zero(fieldType))
 	}
 
@@ -264,6 +280,22 @@ func newFieldFromInfo[T any](info fieldInfo[T], validator func(context *engine.C
 		if v.Type().ConvertibleTo(info.fieldType) {
 			target.Set(v.Convert(info.fieldType))
 			return
+		}
+
+		if info.fieldType.Kind() == reflect.Pointer {
+			elemType := info.fieldType.Elem()
+			if v.Type().AssignableTo(elemType) {
+				ptr := reflect.New(elemType)
+				ptr.Elem().Set(v)
+				target.Set(ptr)
+				return
+			}
+			if v.Type().ConvertibleTo(elemType) {
+				ptr := reflect.New(elemType)
+				ptr.Elem().Set(v.Convert(elemType))
+				target.Set(ptr)
+				return
+			}
 		}
 
 		target.Set(reflect.Zero(info.fieldType))

@@ -31,11 +31,11 @@ func (s *Schema[T]) validateWithOptions(input any, options schema.Options) (T, e
 		return zero, err
 	}
 
-	output, _ := s.validateAST(context, value)
+	output, _ := s.validateAST(context, value, input)
 	return output, context.Error()
 }
 
-func (s *Schema[T]) validateAST(context *engine.Context, value ast.Value) (T, bool) {
+func (s *Schema[T]) validateAST(context *engine.Context, value ast.Value, originalInput any) (T, bool) {
 	if defaultValue, ok := defaults.Apply(value.Presence, context.Options, s.defaultProvider); ok {
 		return defaultValue, false
 	}

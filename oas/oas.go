@@ -73,10 +73,9 @@ type HeaderBuilder = builder.HeaderBuilder
 type LinkBuilder = builder.LinkBuilder
 type ExampleObjectBuilder = builder.ExampleObjectBuilder
 type EncodingBuilder = builder.EncodingBuilder
+type Builder = *builder.OpenAPIBuilder
 
-func New() *builder.OpenAPIBuilder { return builder.New() }
-
-type NewBuilder = *builder.OpenAPIBuilder
+func New() Builder { return builder.New() }
 
 // Schema construtores por tipo
 var (

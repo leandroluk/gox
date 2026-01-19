@@ -92,8 +92,46 @@ type Callback = types.Callback
 // Callbacks represents a map of named callbacks.
 type Callbacks = types.Callbacks
 
+// Schema represents an OpenAPI schema.
+type Schema = types.Schema
+
 // New creates a new OpenAPI document with default values.
 // The document will have openapi set to "3.1.0" by default when marshaled.
 func New() *Document {
 	return types.New()
+}
+
+// String creates a new string schema.
+func String() *Schema {
+	return (&Schema{}).String()
+}
+
+// Integer creates a new integer schema.
+func Integer() *Schema {
+	return (&Schema{}).Integer()
+}
+
+// Number creates a new number schema.
+func Number() *Schema {
+	return (&Schema{}).Number()
+}
+
+// Boolean creates a new boolean schema.
+func Boolean() *Schema {
+	return (&Schema{}).Boolean()
+}
+
+// Object creates a new object schema.
+func Object() *Schema {
+	return (&Schema{}).Object()
+}
+
+// Array creates a new array schema.
+func Array() *Schema {
+	return (&Schema{}).Array()
+}
+
+// Null creates a new null schema.
+func Null() *Schema {
+	return (&Schema{}).Null()
 }

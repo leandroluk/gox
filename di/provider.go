@@ -16,6 +16,7 @@ type Provider struct {
 	OutputType      reflect.Type  // The reflected type of the result.
 	IsSingleton     bool          // Indicates if it should return the same instance every time.
 	CachedInstance  reflect.Value // Stores the instance if it's a singleton.
+	initOnce        sync.Once     // Ensures singleton is initialized only once.
 }
 
 // Reset clears all registered providers.

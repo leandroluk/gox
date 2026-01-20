@@ -23,16 +23,10 @@ func resolveByType(targetType reflect.Type) reflect.Value {
 // buildInstance manages the lifecycle of the instance (Transient vs Singleton).
 func buildInstance(providerInstance *Provider) reflect.Value {
 	if providerInstance.IsSingleton {
-		registryMutex.Lock()
-		defer registryMutex.Unlock()
-
-		if providerInstance.CachedInstance.IsValid() {
-			return providerInstance.CachedInstance
-		}
-
-		instance := callFactoryWithDependencies(providerInstance)
-		providerInstance.CachedInstance = instance
-		return instance
+		providerInstance.initOnce.Do(func() {
+			providerInstance.CachedInstance = callFactoryWithDependencies(providerInstance)
+		})
+		return providerInstance.CachedInstance
 	}
 
 	return callFactoryWithDependencies(providerInstance)

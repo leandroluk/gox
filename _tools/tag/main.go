@@ -130,23 +130,20 @@ func pushTags(version string, modules []string) {
 }
 
 func deleteTags(version string, modules []string) {
-	fmt.Printf("Deleting local tag %s...\n", version)
+	fmt.Printf("Deleting tag %s...\n", version)
 	run("git", "tag", "-d", version)
-	fmt.Printf("Deleting remote tag %s...\n", version)
 	run("git", "push", "origin", ":refs/tags/"+version)
 
 	runParallel(modules, 5, func(mod string) {
 		tag := fmt.Sprintf("%s/%s", mod, version)
-		fmt.Printf("Deleting local tag %s...\n", tag)
+		fmt.Printf("Deleting tag %s...\n", tag)
 		run("git", "tag", "-d", tag)
-		fmt.Printf("Deleting remote tag %s...\n", tag)
 		run("git", "push", "origin", ":refs/tags/"+tag)
 	})
 
 	fmt.Println("Tag deletion completed (some tags may not have existed).")
 }
 
-// runParallel executes fn for each module with a maximum concurrency limit
 func runParallel(modules []string, maxConcurrency int, fn func(string)) {
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, maxConcurrency)
@@ -166,8 +163,6 @@ func runParallel(modules []string, maxConcurrency int, fn func(string)) {
 
 func run(name string, args ...string) {
 	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Warning: command %s %v failed: %v\n", name, args, err)
 	}
@@ -175,8 +170,6 @@ func run(name string, args ...string) {
 
 func mustRun(name string, args ...string) {
 	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Error running command %s %v: %v\n", name, args, err)
 		os.Exit(1)

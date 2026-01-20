@@ -8,6 +8,6 @@ use (
 	./oas
 	./search
 	./mut
-	./v
+	./validator
 	./_tools/coveragebadge
 )

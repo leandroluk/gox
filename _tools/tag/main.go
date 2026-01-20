@@ -104,16 +104,29 @@ func readModulesFromGoWork() []string {
 }
 
 func createTags(version string, modules []string) {
-	fmt.Printf("Creating tag %s for root...\n", version)
-	mustRun("git", "tag", version)
+	if tagExists(version) {
+		fmt.Printf("Tag %s already exists for root, skipping creation.\n", version)
+	} else {
+		fmt.Printf("Creating tag %s for root...\n", version)
+		mustRun("git", "tag", version)
+	}
 
 	runParallel(modules, 5, func(mod string) {
 		tag := fmt.Sprintf("%s/%s", mod, version)
+		if tagExists(tag) {
+			fmt.Printf("Tag %s already exists, skipping creation.\n", tag)
+			return
+		}
 		fmt.Printf("Creating tag %s...\n", tag)
 		mustRun("git", "tag", tag)
 	})
 
-	fmt.Println("All tags created successfully.")
+	fmt.Println("All tags processed successfully.")
+}
+
+func tagExists(tag string) bool {
+	cmd := exec.Command("git", "rev-parse", "--verify", "refs/tags/"+tag)
+	return cmd.Run() == nil
 }
 
 func pushTags(version string, modules []string) {

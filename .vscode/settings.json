@@ -101,8 +101,11 @@
     "editor.foldingStrategy": "indentation",
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
-    }
+    },
   },
+  "go.testExplorer.packageExclusions": [
+    "_tools/**"
+  ],
   // #endregion
   // #region python
   "[python]": {

@@ -23,6 +23,7 @@ help:
 	@echo "  make badges          # geral + por módulo"
 	@echo "  make ci              # test + badges"
 	@echo "  make clean           # remove profiles e svgs"
+	@echo "  make tag <version>   # cria e sobe tags git para raiz e módulos (ex: make tag v0.2.0)"
 
 .PHONY: test
 test:
@@ -66,3 +67,11 @@ ci: test badges
 clean:
 	$(GO) clean -testcache
 	rm -rf $(COVERPROFILE_ALL) $(BADGE_DIR)/*.svg
+
+# ---- Release ----
+.PHONY: tag
+tag:
+	$(GO) run ./_tools/tag "$(filter-out $@,$(MAKECMDGOALS))" $(WORK_MODULES)
+
+%:
+	@:

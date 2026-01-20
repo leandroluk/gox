@@ -123,7 +123,22 @@ func (s *Schema) Property(name string, build func(doc *Schema)) *Schema {
 	return s
 }
 
-func (s *Schema) Required(values ...string) *Schema {
+func (s *Schema) Required(name string, build func(doc *Schema)) *Schema {
+	s.Property(name, build)
+	for _, r := range s.required {
+		if r == name {
+			return s
+		}
+	}
+	s.required = append(s.required, name)
+	return s
+}
+
+func (s *Schema) Optional(name string, build func(doc *Schema)) *Schema {
+	return s.Property(name, build)
+}
+
+func (s *Schema) RequiredProperties(values ...string) *Schema {
 	s.required = values
 	return s
 }

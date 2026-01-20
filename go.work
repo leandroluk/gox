@@ -11,4 +11,5 @@ use (
 	./util
 	./validate
 	./_tools/coveragebadge
+	./_tools/tag
 )

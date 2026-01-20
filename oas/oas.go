@@ -42,7 +42,7 @@
 // Use type helpers for concise schema definitions:
 //
 //	schema.String().MinLength(3).MaxLength(100)
-//	schema.Object().Required("id", "name")
+//	schema.Object().RequiredProperties("id", "name")
 //	schema.Array().Items(func(s *Schema) { s.String() })
 //
 // # Validation

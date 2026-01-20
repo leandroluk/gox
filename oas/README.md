@@ -700,12 +700,33 @@ schema.MinItems(n).
 
 #### Object Structure
 ```go
-schema.Required(fields...).
+schema.RequiredProperties(fields...).
        Property(name, func(s *Schema) {}).
+       Required(name, func(s *Schema) {}).  // Define property and mark as required
+       Optional(name, func(s *Schema) {}).  // Alias for Property() for clarity
        AdditionalProperties(value).
        MinProperties(n).
        MaxProperties(n)
 ```
+
+##### Required & Optional
+
+Use `Required` and `Optional` to avoid repeating field names:
+
+```go
+// Traditional approach - field name repeated
+schema.Object().
+    Property("name", func(s *Schema) { s.String() }).
+    Property("email", func(s *Schema) { s.String() }).
+    RequiredProperties("name", "email")
+
+// New approach - no repetition
+schema.Object().
+    Required("name", func(s *Schema) { s.String() }).
+    Required("email", func(s *Schema) { s.String() }).
+    Optional("age", func(s *Schema) { s.Integer() })
+```
+
 
 #### Composition
 ```go

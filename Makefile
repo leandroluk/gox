@@ -9,7 +9,7 @@ COVERPROFILE_ALL ?= coverage.out
 WORK_MODULES ?= cqrs di env meta mut oas search util validate
 WORK_PACKAGES := $(addsuffix /...,$(addprefix ./,$(WORK_MODULES)))
 
-BADGE_TOOL_PKG ?= ./_tools/coveragebadge
+BADGE_TOOL_PKG ?= ./_tools/badge
 
 .DEFAULT_GOAL := help
 
@@ -23,7 +23,10 @@ help:
 	@echo "  make badges          # geral + por módulo"
 	@echo "  make ci              # test + badges"
 	@echo "  make clean           # remove profiles e svgs"
-	@echo "  make tag <version>   # cria e sobe tags git para raiz e módulos (ex: make tag v0.2.0)"
+	@echo "  make tag <version>       # cria e sobe tags git (ex: make tag v0.2.0)"
+	@echo "  make tag-create <version> # apenas cria tags localmente"
+	@echo "  make tag-push <version>   # apenas envia tags para remote"
+	@echo "  make tag-delete <version> # deleta tags local e remotamente"
 
 .PHONY: test
 test:
@@ -69,9 +72,21 @@ clean:
 	rm -rf $(COVERPROFILE_ALL) $(BADGE_DIR)/*.svg
 
 # ---- Release ----
+.PHONY: tag-create
+tag-create:
+	$(GO) run ./_tools/tag --create "$(filter-out $@,$(MAKECMDGOALS))"
+
+.PHONY: tag-push
+tag-push:
+	$(GO) run ./_tools/tag --push "$(filter-out $@,$(MAKECMDGOALS))"
+
+.PHONY: tag-delete
+tag-delete:
+	$(GO) run ./_tools/tag --delete "$(filter-out $@,$(MAKECMDGOALS))"
+
 .PHONY: tag
 tag:
-	$(GO) run ./_tools/tag "$(filter-out $@,$(MAKECMDGOALS))" $(WORK_MODULES)
+	$(GO) run ./_tools/tag --create --push "$(filter-out $@,$(MAKECMDGOALS))"
 
 %:
 	@:

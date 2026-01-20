@@ -10,6 +10,6 @@ use (
 	./search
 	./util
 	./validate
-	./_tools/coveragebadge
+	./_tools/badge
 	./_tools/tag
 )

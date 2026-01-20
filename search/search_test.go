@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/leandroluk/go/search"
+	"github.com/leandroluk/gox/search"
 )
 
 type UserFilter struct {

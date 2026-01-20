@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 func parseDurationWithOptions(options schema.Options, input string) (time.Duration, bool) {

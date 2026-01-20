@@ -1,7 +1,7 @@
 // schema/text/rule/len.go
 package rule
 
-import "github.com/leandroluk/go/validate/internal/ruleset"
+import "github.com/leandroluk/gox/validate/internal/ruleset"
 
 func Len(code string, expected int) ruleset.Rule[string] {
 	return newRule(code, "invalid length", func(actual string) (bool, map[string]any) {

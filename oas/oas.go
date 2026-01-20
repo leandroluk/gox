@@ -63,7 +63,7 @@
 // For detailed examples and API reference, see the README.md file.
 package oas
 
-import "github.com/leandroluk/go/oas/types"
+import "github.com/leandroluk/gox/oas/types"
 
 // Type aliases for backward compatibility and cleaner imports.
 // All core functionality is implemented in the types sub-package.

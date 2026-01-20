@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/leandroluk/go/oas/enums"
+	"github.com/leandroluk/gox/oas/enums"
 )
 
 // Parameter represents an OpenAPI parameter.

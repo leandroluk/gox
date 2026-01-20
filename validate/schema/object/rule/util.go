@@ -4,7 +4,7 @@ package rule
 import (
 	"strconv"
 
-	"github.com/leandroluk/go/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/ast"
 )
 
 func conditionMet(actual ast.Value, op ConditionOp, expected ast.Value) bool {

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/leandroluk/go/validate/internal/ast"
-	"github.com/leandroluk/go/validate/schema/object"
+	"github.com/leandroluk/gox/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/schema/object"
 )
 
 // AWS-style Config with optional pointer fields

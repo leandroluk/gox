@@ -1,3 +1,3 @@
-module github.com/leandroluk/go/oas
+module github.com/leandroluk/gox/oas
 
 go 1.25

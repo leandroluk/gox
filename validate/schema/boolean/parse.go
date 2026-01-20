@@ -4,8 +4,8 @@ package boolean
 import (
 	"strconv"
 
-	"github.com/leandroluk/go/validate/internal/ast"
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 func parseBooleanWithOptions(options schema.Options, value ast.Value) (bool, bool) {

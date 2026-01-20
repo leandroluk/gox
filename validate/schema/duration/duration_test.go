@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/leandroluk/go/validate/internal/ast"
-	"github.com/leandroluk/go/validate/internal/testkit"
-	"github.com/leandroluk/go/validate/schema"
-	"github.com/leandroluk/go/validate/schema/duration"
+	"github.com/leandroluk/gox/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/testkit"
+	"github.com/leandroluk/gox/validate/schema"
+	"github.com/leandroluk/gox/validate/schema/duration"
 )
 
 func TestDuration_MissingAndNullAreIgnoredByDefault(t *testing.T) {

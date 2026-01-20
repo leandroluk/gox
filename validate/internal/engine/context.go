@@ -2,10 +2,10 @@
 package engine
 
 import (
-	"github.com/leandroluk/go/validate/internal/ast"
-	"github.com/leandroluk/go/validate/internal/issues"
-	"github.com/leandroluk/go/validate/internal/path"
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/issues"
+	"github.com/leandroluk/gox/validate/internal/path"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 type Context struct {

@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/leandroluk/go/validate/internal/codec"
-	"github.com/leandroluk/go/validate/internal/types"
+	"github.com/leandroluk/gox/validate/internal/codec"
+	"github.com/leandroluk/gox/validate/internal/types"
 )
 
 func removeUnderscore(input string) string {

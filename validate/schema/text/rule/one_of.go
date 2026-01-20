@@ -1,7 +1,7 @@
 // schema/text/rule/one_of.go
 package rule
 
-import "github.com/leandroluk/go/validate/internal/ruleset"
+import "github.com/leandroluk/gox/validate/internal/ruleset"
 
 func OneOf(code string, values ...string) ruleset.Rule[string] {
 	allowed := make(map[string]struct{}, len(values))

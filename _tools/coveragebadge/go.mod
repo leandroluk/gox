@@ -1,3 +1,3 @@
-module github.com/leandroluk/go/tools/coveragebadge
+module github.com/leandroluk/gox/tools/coveragebadge
 
 go 1.25

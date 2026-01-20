@@ -3,7 +3,7 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/leandroluk/go/oas/enums"
+	"github.com/leandroluk/gox/oas/enums"
 )
 
 // Header represents a header.

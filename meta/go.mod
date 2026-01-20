@@ -1,3 +1,3 @@
-module github.com/leandroluk/go/meta
+module github.com/leandroluk/gox/meta
 
 go 1.25

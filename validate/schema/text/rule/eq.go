@@ -1,7 +1,7 @@
 // schema/text/rule/eq.go
 package rule
 
-import "github.com/leandroluk/go/validate/internal/ruleset"
+import "github.com/leandroluk/gox/validate/internal/ruleset"
 
 func Eq(code string, expected string) ruleset.Rule[string] {
 	return newRule(code, "must be equal", func(actual string) (bool, map[string]any) {

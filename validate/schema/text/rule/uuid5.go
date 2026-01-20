@@ -1,7 +1,7 @@
 // schema/text/rule/uuid5.go
 package rule
 
-import "github.com/leandroluk/go/validate/internal/ruleset"
+import "github.com/leandroluk/gox/validate/internal/ruleset"
 
 func UUID5(code string) ruleset.Rule[string] {
 	return newRule(code, "invalid uuid5", func(actual string) (bool, map[string]any) {

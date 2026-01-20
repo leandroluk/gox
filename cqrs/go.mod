@@ -1,5 +1,5 @@
-module github.com/leandroluk/go/cqrs
+module github.com/leandroluk/gox/cqrs
 
 go 1.25
 
-require github.com/leandroluk/go/di v0.1.0
+require github.com/leandroluk/gox/di v0.1.0

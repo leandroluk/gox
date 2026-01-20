@@ -50,5 +50,5 @@ Unlike struct tags, which are limited to strings and become unreadable when too 
 ## Installation
 
 ```sh
-go get github.com/leandroluk/go/meta
+go get github.com/leandroluk/gox/meta
 ```

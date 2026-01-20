@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 func parseDate(options schema.Options, input string) (time.Time, string, bool) {

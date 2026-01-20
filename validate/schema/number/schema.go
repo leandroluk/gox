@@ -4,11 +4,11 @@ package number
 import (
 	"reflect"
 
-	"github.com/leandroluk/go/validate/internal/defaults"
-	"github.com/leandroluk/go/validate/internal/ruleset"
-	"github.com/leandroluk/go/validate/internal/types"
-	"github.com/leandroluk/go/validate/schema"
-	"github.com/leandroluk/go/validate/schema/number/rule"
+	"github.com/leandroluk/gox/validate/internal/defaults"
+	"github.com/leandroluk/gox/validate/internal/ruleset"
+	"github.com/leandroluk/gox/validate/internal/types"
+	"github.com/leandroluk/gox/validate/schema"
+	"github.com/leandroluk/gox/validate/schema/number/rule"
 )
 
 type Schema[N types.Number] struct {

@@ -4,10 +4,10 @@ package boolean_test
 import (
 	"testing"
 
-	"github.com/leandroluk/go/validate/internal/ast"
-	"github.com/leandroluk/go/validate/internal/testkit"
-	"github.com/leandroluk/go/validate/schema"
-	"github.com/leandroluk/go/validate/schema/boolean"
+	"github.com/leandroluk/gox/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/testkit"
+	"github.com/leandroluk/gox/validate/schema"
+	"github.com/leandroluk/gox/validate/schema/boolean"
 )
 
 func TestBoolean_MissingAndNullAreIgnoredByDefault(t *testing.T) {

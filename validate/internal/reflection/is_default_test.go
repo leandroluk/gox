@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/leandroluk/go/validate/internal/reflection"
+	"github.com/leandroluk/gox/validate/internal/reflection"
 )
 
 func TestIsDefault_Primitives(t *testing.T) {

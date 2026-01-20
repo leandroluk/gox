@@ -4,10 +4,10 @@ package combinator_test
 import (
 	"testing"
 
-	"github.com/leandroluk/go/validate/internal/testkit"
-	"github.com/leandroluk/go/validate/schema"
-	"github.com/leandroluk/go/validate/schema/combinator"
-	"github.com/leandroluk/go/validate/schema/text"
+	"github.com/leandroluk/gox/validate/internal/testkit"
+	"github.com/leandroluk/gox/validate/schema"
+	"github.com/leandroluk/gox/validate/schema/combinator"
+	"github.com/leandroluk/gox/validate/schema/text"
 )
 
 func TestAnyOf_PassesWhenLaterSchemaPasses_EvenWithFailFast(t *testing.T) {

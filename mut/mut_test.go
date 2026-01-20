@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	mut "github.com/leandroluk/go/mut"
+	mut "github.com/leandroluk/gox/mut"
 )
 
 // User represents a complex struct for testing

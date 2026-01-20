@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/leandroluk/go/oas"
+	"github.com/leandroluk/gox/oas"
 )
 
 func TestTopicLevelBuilders(t *testing.T) {

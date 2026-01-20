@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/leandroluk/go/di"
+	"github.com/leandroluk/gox/di"
 )
 
 // --- Mocks ---

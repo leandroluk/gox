@@ -15,7 +15,7 @@ A utility package for Go that provides the generic `Mut[T]` type to handle **Par
 ## Installation
 
 ```sh
-go get github.com/leandroluk/go/mut
+go get github.com/leandroluk/gox/mut
 ```
 
 ## Usage

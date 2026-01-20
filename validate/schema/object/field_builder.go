@@ -4,12 +4,12 @@ package object
 import (
 	"reflect"
 
-	"github.com/leandroluk/go/validate/internal/engine"
-	"github.com/leandroluk/go/validate/schema"
-	"github.com/leandroluk/go/validate/schema/boolean"
-	"github.com/leandroluk/go/validate/schema/date"
-	"github.com/leandroluk/go/validate/schema/duration"
-	"github.com/leandroluk/go/validate/schema/text"
+	"github.com/leandroluk/gox/validate/internal/engine"
+	"github.com/leandroluk/gox/validate/schema"
+	"github.com/leandroluk/gox/validate/schema/boolean"
+	"github.com/leandroluk/gox/validate/schema/date"
+	"github.com/leandroluk/gox/validate/schema/duration"
+	"github.com/leandroluk/gox/validate/schema/text"
 )
 
 type FieldBuilder[T any] struct {

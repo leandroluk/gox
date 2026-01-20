@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/leandroluk/go/validate/internal/issues"
+	"github.com/leandroluk/gox/validate/internal/issues"
 )
 
 func RequireValidationError(t *testing.T, err error) issues.ValidationError {

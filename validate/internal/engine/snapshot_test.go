@@ -4,9 +4,9 @@ package engine_test
 import (
 	"testing"
 
-	"github.com/leandroluk/go/validate/internal/engine"
-	"github.com/leandroluk/go/validate/internal/testkit"
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/internal/engine"
+	"github.com/leandroluk/gox/validate/internal/testkit"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 func TestTakeAndRestoreSnapshot_RestoresPathAndIssues(t *testing.T) {

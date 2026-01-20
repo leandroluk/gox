@@ -4,7 +4,7 @@ package rule
 import (
 	"strings"
 
-	"github.com/leandroluk/go/validate/internal/ruleset"
+	"github.com/leandroluk/gox/validate/internal/ruleset"
 )
 
 func NeIgnoreCase(code string, disallowed string) ruleset.Rule[string] {

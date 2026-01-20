@@ -1,7 +1,7 @@
 // internal/ruleset/rule.go
 package ruleset
 
-import "github.com/leandroluk/go/validate/internal/engine"
+import "github.com/leandroluk/gox/validate/internal/engine"
 
 type Reporter interface {
 	AddIssue(code string, message string) bool

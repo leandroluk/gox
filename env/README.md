@@ -34,5 +34,5 @@ timeout := env.Get[time.Duration]("TIMEOUT")
 ## Installation
 
 ```sh
-go get github.com/leandroluk/go/env
+go get github.com/leandroluk/gox/env
 ```

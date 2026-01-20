@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/leandroluk/go/di"
+	"github.com/leandroluk/gox/di"
 )
 
 type registry struct {

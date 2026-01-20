@@ -2,8 +2,8 @@
 package engine
 
 import (
-	"github.com/leandroluk/go/validate/internal/issues"
-	"github.com/leandroluk/go/validate/internal/path"
+	"github.com/leandroluk/gox/validate/internal/issues"
+	"github.com/leandroluk/gox/validate/internal/path"
 )
 
 type Snapshot struct {

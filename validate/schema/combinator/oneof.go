@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/leandroluk/go/validate/internal/issues"
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/internal/issues"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 type OneOfSchema[T any] struct {

@@ -22,7 +22,7 @@ Validation logic lives in the **Infrastructure** or **Presentation** layer, defi
 ## Installation
 
 ```bash
-go get github.com/leandroluk/go/v
+go get github.com/leandroluk/gox/v
 ```
 
 ## Summary
@@ -53,7 +53,7 @@ package main
 
 import (
     "fmt"
-    v "github.com/leandroluk/go/validate"
+    v "github.com/leandroluk/gox/validate"
 )
 
 func main() {

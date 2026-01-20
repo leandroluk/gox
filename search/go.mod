@@ -1,3 +1,3 @@
-module github.com/leandroluk/go/search
+module github.com/leandroluk/gox/search
 
 go 1.25

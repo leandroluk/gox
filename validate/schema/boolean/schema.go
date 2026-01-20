@@ -4,9 +4,9 @@ package boolean
 import (
 	"reflect"
 
-	"github.com/leandroluk/go/validate/internal/defaults"
-	"github.com/leandroluk/go/validate/internal/ruleset"
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/internal/defaults"
+	"github.com/leandroluk/gox/validate/internal/ruleset"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 type Schema struct {

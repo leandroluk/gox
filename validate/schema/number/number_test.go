@@ -6,12 +6,12 @@ import (
 	"math"
 	"testing"
 
-	"github.com/leandroluk/go/validate/internal/ast"
-	"github.com/leandroluk/go/validate/internal/engine"
-	"github.com/leandroluk/go/validate/internal/issues"
-	"github.com/leandroluk/go/validate/internal/testkit"
-	"github.com/leandroluk/go/validate/schema"
-	"github.com/leandroluk/go/validate/schema/number"
+	"github.com/leandroluk/gox/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/engine"
+	"github.com/leandroluk/gox/validate/internal/issues"
+	"github.com/leandroluk/gox/validate/internal/testkit"
+	"github.com/leandroluk/gox/validate/schema"
+	"github.com/leandroluk/gox/validate/schema/number"
 )
 
 func TestNumber_MissingAndNullAreIgnoredByDefault(t *testing.T) {

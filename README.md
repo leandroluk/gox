@@ -1,5 +1,5 @@
 <p>
-  <img alt="Build Status" src="https://github.com/leandroluk/go/actions/workflows/ci.yml/badge.svg?branch=main">
+  <img alt="Build Status" src="https://github.com/leandroluk/gox/actions/workflows/ci.yml/badge.svg?branch=main">
   <img alt="Coverage" src=".public/coverage.svg">
   <img alt="Release" src="https://img.shields.io/github/release/leandroluk/go.svg?style=flat">
 </p>

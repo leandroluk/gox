@@ -68,5 +68,5 @@ if err := q.ValidateAgainst[UserView](); err != nil {
 ## Installation
 
 ```sh
-go get github.com/leandroluk/go/search
+go get github.com/leandroluk/gox/search
 ```

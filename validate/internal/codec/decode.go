@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/leandroluk/go/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/ast"
 )
 
 func Decode(data []byte) (ast.Value, error) {

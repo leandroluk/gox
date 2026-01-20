@@ -60,5 +60,5 @@ user, err := cqrs.ExecuteQuery[*User](ctx, GetUserQuery{ID: "123"})
 ## Installation
 
 ```sh
-go get github.com/leandroluk/go/cqrs
+go get github.com/leandroluk/gox/cqrs
 ```

@@ -1,7 +1,7 @@
 // schema/text/rule/min.go
 package rule
 
-import "github.com/leandroluk/go/validate/internal/ruleset"
+import "github.com/leandroluk/gox/validate/internal/ruleset"
 
 func Min(code string, min int) ruleset.Rule[string] {
 	return newRule(code, "too short", func(actual string) (bool, map[string]any) {

@@ -44,7 +44,7 @@ func validate(u *User) (bool, error) {
 Structs are clean. Rules are code.
 
 ```go
-import v "github.com/leandroluk/go/validate"
+import v "github.com/leandroluk/gox/validate"
 
 type User struct {
     Name  string

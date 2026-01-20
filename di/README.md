@@ -13,5 +13,5 @@ A lightweight, reflection-based Dependency Injection container for Go, supportin
 ## Installation
 
 ```go
-import "github.com/leandroluk/go/di"
+import "github.com/leandroluk/gox/di"
 ```

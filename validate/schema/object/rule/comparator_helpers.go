@@ -4,7 +4,7 @@ package rule
 import (
 	"strconv"
 
-	"github.com/leandroluk/go/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/ast"
 )
 
 func compareOrder(left ast.Value, right ast.Value) (int, bool) {

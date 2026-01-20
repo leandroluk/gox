@@ -4,7 +4,7 @@ package codec
 import (
 	"encoding/json"
 
-	"github.com/leandroluk/go/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/ast"
 )
 
 func Encode(value ast.Value) ([]byte, error) {

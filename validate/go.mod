@@ -1,3 +1,3 @@
-module github.com/leandroluk/go/validate
+module github.com/leandroluk/gox/validate
 
 go 1.25

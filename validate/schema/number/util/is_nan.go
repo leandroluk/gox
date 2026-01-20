@@ -5,7 +5,7 @@ import (
 	"math"
 	"reflect"
 
-	"github.com/leandroluk/go/validate/internal/types"
+	"github.com/leandroluk/gox/validate/internal/types"
 )
 
 func IsNaN[N types.Number](value N) bool {

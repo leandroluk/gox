@@ -4,7 +4,7 @@ package combinator
 import (
 	"reflect"
 
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 type Schema[T any] interface {

@@ -2,8 +2,8 @@
 package text
 
 import (
-	"github.com/leandroluk/go/validate/internal/ast"
-	"github.com/leandroluk/go/validate/internal/engine"
+	"github.com/leandroluk/gox/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/engine"
 )
 
 func parseTextValue(context *engine.Context, value ast.Value) (string, bool) {

@@ -4,7 +4,7 @@ package rule
 import (
 	"strings"
 
-	"github.com/leandroluk/go/validate/internal/ruleset"
+	"github.com/leandroluk/gox/validate/internal/ruleset"
 )
 
 func EndsWith(code string, suffix string) ruleset.Rule[string] {

@@ -4,11 +4,11 @@ package duration
 import (
 	"time"
 
-	"github.com/leandroluk/go/validate/internal/ast"
-	"github.com/leandroluk/go/validate/internal/defaults"
-	"github.com/leandroluk/go/validate/internal/engine"
-	"github.com/leandroluk/go/validate/internal/ruleset"
-	"github.com/leandroluk/go/validate/schema"
+	"github.com/leandroluk/gox/validate/internal/ast"
+	"github.com/leandroluk/gox/validate/internal/defaults"
+	"github.com/leandroluk/gox/validate/internal/engine"
+	"github.com/leandroluk/gox/validate/internal/ruleset"
+	"github.com/leandroluk/gox/validate/schema"
 )
 
 func (s *Schema) validateWithOptions(input any, options schema.Options) (time.Duration, error) {

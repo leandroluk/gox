@@ -1,7 +1,7 @@
 // internal/ruleset/set.go
 package ruleset
 
-import "github.com/leandroluk/go/validate/internal/engine"
+import "github.com/leandroluk/gox/validate/internal/engine"
 
 type Set[T any] struct {
 	order []string

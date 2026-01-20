@@ -5,10 +5,10 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/leandroluk/go/validate/internal/defaults"
-	"github.com/leandroluk/go/validate/internal/ruleset"
-	"github.com/leandroluk/go/validate/schema"
-	"github.com/leandroluk/go/validate/schema/date/rule"
+	"github.com/leandroluk/gox/validate/internal/defaults"
+	"github.com/leandroluk/gox/validate/internal/ruleset"
+	"github.com/leandroluk/gox/validate/schema"
+	"github.com/leandroluk/gox/validate/schema/date/rule"
 )
 
 type Schema struct {

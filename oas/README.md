@@ -5,7 +5,7 @@ Type-safe OpenAPI 3.1 document builder for Go with 100% fluent API.
 ## Installation
 
 ```sh
-go get github.com/leandroluk/go/oas
+go get github.com/leandroluk/gox/oas
 ```
 
 ## Quick Start
@@ -16,8 +16,8 @@ package main
 import (
   "encoding/json"
   "os"
-  "github.com/leandroluk/go/oas/types"
-  "github.com/leandroluk/go/oas/enums"
+  "github.com/leandroluk/gox/oas/types"
+  "github.com/leandroluk/gox/oas/enums"
 )
 
 func main() {
@@ -143,8 +143,8 @@ import (
   "encoding/json"
   "os"
 
-  "github.com/leandroluk/go/oas/enums"
-  "github.com/leandroluk/go/oas/types"
+  "github.com/leandroluk/gox/oas/enums"
+  "github.com/leandroluk/gox/oas/types"
 )
 
 func main() {

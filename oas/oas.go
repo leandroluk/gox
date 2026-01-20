@@ -68,32 +68,97 @@ import "github.com/leandroluk/go/oas/types"
 // Type aliases for backward compatibility and cleaner imports.
 // All core functionality is implemented in the types sub-package.
 
-// Document represents an OpenAPI 3.1 document.
+// Callback map of paths.
+type Callback = types.Callback
+
+// Callbacks map of callbacks.
+type Callbacks = types.Callbacks
+
+// Components represents reusable components.
+type Components = types.Components
+
+// Contact represents contact information for the API.
+type Contact = types.Contact
+
+// Discriminator represents a discriminator.
+type Discriminator = types.Discriminator
+
+// SecurityRequirement represents a security requirement.
+type SecurityRequirement = types.SecurityRequirement
+
+// SecurityRequirements represents a list of security requirements.
+type SecurityRequirements = types.SecurityRequirements
+
+// Document represents an OpenAPI document.
 type Document = types.Document
+
+// Encoding represents encoding properties.
+type Encoding = types.Encoding
+
+// ExampleObject represents an example.
+type ExampleObject = types.ExampleObject
+
+// ExternalDocs represents external documentation.
+type ExternalDocs = types.ExternalDocs
+
+// Header represents a header.
+type Header = types.Header
+
+// Info represents the metadata for the API.
+type Info = types.Info
+
+// License represents license information for the API.
+type License = types.License
+
+// Link represents a link.
+type Link = types.Link
+
+// MediaType represents a media type.
+type MediaType = types.MediaType
+
+// OAuthFlow represents an OAuth flow.
+type OAuthFlow = types.OAuthFlow
+
+// Operation represents an API operation.
+type Operation = types.Operation
+
+// Parameter represents an OpenAPI parameter.
+type Parameter = types.Parameter
 
 // Path represents an OAS path item (endpoints at a specific path).
 type Path = types.Path
 
-// Operation represents an API operation (GET, POST, etc.).
-type Operation = types.Operation
+// RequestBody represents a request body.
+type RequestBody = types.RequestBody
 
-// Components holds reusable objects for different aspects of the OAS.
-type Components = types.Components
+// ResponseWithCode wraps a Response with its status code.
+// This allows a fluent API where the status code is attached to the response object
+// before being added to the Operation.
+type ResponseWithCode = types.ResponseWithCode
 
-// SecurityRequirement maps security scheme names to required scopes.
-type SecurityRequirement = types.SecurityRequirement
+// Response represents a response.
+type Response = types.Response
 
-// SecurityRequirements is a list of security requirement alternatives.
-type SecurityRequirements = types.SecurityRequirements
-
-// Callback represents a map of possible out-of-band callbacks related to the parent operation.
-type Callback = types.Callback
-
-// Callbacks represents a map of named callbacks.
-type Callbacks = types.Callbacks
-
-// Schema represents an OpenAPI schema.
+// Schema represents an OAS 3.1 schema.
 type Schema = types.Schema
+
+// OAuthFlows represents the configuration for the supported OAuth Flows.
+type OAuthFlows = types.OAuthFlows
+
+// SecurityScheme represents a security scheme.
+type SecurityScheme = types.SecurityScheme
+
+// ServerVariable represents a server variable for server URL template substitution.
+type ServerVariable = types.ServerVariable
+
+// Server represents a server.
+type Server = types.Server
+
+// Tag represents a tag.
+type Tag = types.Tag
+
+// Xml represents XML metadata.
+type Xml = types.Xml
 
 // New creates a new OpenAPI document with default values.
 // The document will have openapi set to "3.1.0" by default when marshaled.

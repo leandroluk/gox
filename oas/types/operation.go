@@ -56,6 +56,16 @@ func (o *Operation) RequestBody(build func(r *RequestBody)) *Operation {
 	return o
 }
 
+func (o *Operation) Responses(builders ...*ResponseWithCode) *Operation {
+	if o.responses == nil {
+		o.responses = make(map[string]*Response)
+	}
+	for _, b := range builders {
+		o.responses[b.Code] = b.Response
+	}
+	return o
+}
+
 func (o *Operation) Response(name string, build func(r *Response)) *Operation {
 	if o.responses == nil {
 		o.responses = make(map[string]*Response)

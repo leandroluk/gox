@@ -30,16 +30,16 @@ make test
 
 ## Modules
 
-| Module                 | Purpose                                                                      |                       Coverage                       |
-| :--------------------- | :--------------------------------------------------------------------------- | :--------------------------------------------------: |
-| [**cqrs**](./cqrs)     | Mediator for Commands and Queries with automatic type coercion.              |   [![coverage](.public/cqrs-coverage.svg)](./cqrs)   |
-| [**di**](./di)         | Lightweight Dependency Injection container with Singleton/Transient support. |     [![coverage](.public/di-coverage.svg)](./di)     |
-| [**env**](./env)       | Environment variables parser with automatic type coercion.                   |    [![coverage](.public/env-coverage.svg)](./env)    |
-| [**meta**](./meta)     | Metadata builder for complex filtering, sorting, and pagination.             |   [![coverage](.public/meta-coverage.svg)](./meta)   |
-| [**mut**](./mut)       | Tracks partial JSON updates to distinguish missing fields from zero-values.  |    [![coverage](.public/mut-coverage.svg)](./mut)    |
-| [**oas**](./oas)       | OpenAPI (Swagger) builder for complex filtering, sorting, and pagination.    |    [![coverage](.public/oas-coverage.svg)](./oas)    |
-| [**search**](./search) | Generic query builder for complex filtering, sorting, and pagination.        | [![coverage](.public/search-coverage.svg)](./search) |
-| [**v**](./v)           | Generic validator for complex filtering, sorting, and pagination.            |      [![coverage](.public/v-coverage.svg)](./v)      |
+| Module                     | Purpose                                                                      |                         Coverage                         |
+| :------------------------- | :--------------------------------------------------------------------------- | :------------------------------------------------------: |
+| [**cqrs**](./cqrs)         | Mediator for Commands and Queries with automatic type coercion.              |     [![coverage](.public/cqrs-coverage.svg)](./cqrs)     |
+| [**di**](./di)             | Lightweight Dependency Injection container with Singleton/Transient support. |       [![coverage](.public/di-coverage.svg)](./di)       |
+| [**env**](./env)           | Environment variables parser with automatic type coercion.                   |      [![coverage](.public/env-coverage.svg)](./env)      |
+| [**meta**](./meta)         | Metadata builder for complex filtering, sorting, and pagination.             |     [![coverage](.public/meta-coverage.svg)](./meta)     |
+| [**mut**](./mut)           | Tracks partial JSON updates to distinguish missing fields from zero-values.  |      [![coverage](.public/mut-coverage.svg)](./mut)      |
+| [**oas**](./oas)           | OpenAPI (Swagger) builder for complex filtering, sorting, and pagination.    |      [![coverage](.public/oas-coverage.svg)](./oas)      |
+| [**search**](./search)     | Generic query builder for complex filtering, sorting, and pagination.        |   [![coverage](.public/search-coverage.svg)](./search)   |
+| [**validate**](./validate) | Generic validator for complex filtering, sorting, and pagination.            | [![coverage](.public/validate-coverage.svg)](./validate) |
 
 ## Philosophy
 

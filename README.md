@@ -4,12 +4,12 @@
   <img alt="Release" src="https://img.shields.io/github/release/leandroluk/go.svg?style=flat">
 </p>
 
-# Go Core Libraries
+# GoX Extension Libraries
 
 A collection of high-performance, decoupled, and type-safe Go libraries for modern application development.
 
 ## Contents
-- [Go Core Libraries](#go-core-libraries)
+- [GoX Extension Libraries](#gox-extension-libraries)
   - [Contents](#contents)
   - [Getting started](#getting-started)
     - [Run tests across all modules](#run-tests-across-all-modules)

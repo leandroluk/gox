@@ -5,9 +5,10 @@ use (
 	./di
 	./env
 	./meta
+	./mut
 	./oas
 	./search
-	./mut
+	./util
 	./validate
 	./_tools/coveragebadge
 )

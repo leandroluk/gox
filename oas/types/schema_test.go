@@ -108,3 +108,26 @@ func TestRequiredPropertyDoesNotDuplicate(t *testing.T) {
 		t.Errorf("Expected required field to be 'name', got '%s'", required[0].(string))
 	}
 }
+
+func TestNullableType(t *testing.T) {
+	schema := &types.Schema{}
+	schema.String().Nullable()
+
+	data, err := json.Marshal(schema)
+	if err != nil {
+		t.Fatalf("Failed to marshal schema: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("Failed to unmarshal schema: %v", err)
+	}
+
+	if result["type"] != "string" {
+		t.Errorf("Expected type 'string', got %v", result["type"])
+	}
+
+	if result["nullable"] != true {
+		t.Errorf("Expected nullable true, got %v", result["nullable"])
+	}
+}

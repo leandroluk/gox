@@ -139,7 +139,7 @@ type ResponseWithCode = types.ResponseWithCode
 // Response represents a response.
 type Response = types.Response
 
-// Schema represents an OAS 3.1 schema.
+// Schema represents an OAS 3.0 schema.
 type Schema = types.Schema
 
 // OAuthFlows represents the configuration for the supported OAuth Flows.
@@ -161,7 +161,7 @@ type Tag = types.Tag
 type Xml = types.Xml
 
 // New creates a new OpenAPI document with default values.
-// The document will have openapi set to "3.1.0" by default when marshaled.
+// The document will have openapi set to "3.0.3" by default when marshaled.
 func New() *Document {
 	return types.New()
 }

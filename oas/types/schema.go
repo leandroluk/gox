@@ -8,7 +8,8 @@ import (
 
 // Schema represents an OAS 3.1 schema.
 type Schema struct {
-	type_                 []enums.SchemaType
+	type_                 enums.SchemaType
+	nullable              *bool
 	format                *string
 	description           *string
 	properties            map[string]*Schema
@@ -55,7 +56,9 @@ type Schema struct {
 }
 
 func (s *Schema) Type(values ...enums.SchemaType) *Schema {
-	s.type_ = values
+	if len(values) > 0 {
+		s.type_ = values[0]
+	}
 	return s
 }
 
@@ -89,12 +92,8 @@ func (s *Schema) Null() *Schema {
 }
 
 func (s *Schema) Nullable() *Schema {
-	for _, t := range s.type_ {
-		if t == enums.SchemaNull {
-			return s
-		}
-	}
-	s.type_ = append(s.type_, enums.SchemaNull)
+	v := true
+	s.nullable = &v
 	return s
 }
 
@@ -411,7 +410,8 @@ func (s *Schema) Const(value any) *Schema {
 
 func (s Schema) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		Type                  []enums.SchemaType `json:"type,omitempty"`
+		Type                  enums.SchemaType   `json:"type,omitempty"`
+		Nullable              *bool              `json:"nullable,omitempty"`
 		Format                *string            `json:"format,omitempty"`
 		Description           *string            `json:"description,omitempty"`
 		Properties            map[string]*Schema `json:"properties,omitempty"`
@@ -457,6 +457,7 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 		Const                 any                `json:"const,omitempty"`
 	}{
 		Type:                  s.type_,
+		Nullable:              s.nullable,
 		Format:                s.format,
 		Description:           s.description,
 		Properties:            s.properties,

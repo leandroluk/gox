@@ -17,42 +17,42 @@ func TestTopicLevelBuilders(t *testing.T) {
 		{
 			name:     "should create string schema",
 			schema:   oas.String(),
-			expected: `{"type":["string"]}`,
+			expected: `{"type":"string"}`,
 		},
 		{
 			name:     "should create integer schema",
 			schema:   oas.Integer(),
-			expected: `{"type":["integer"]}`,
+			expected: `{"type":"integer"}`,
 		},
 		{
 			name:     "should create number schema",
 			schema:   oas.Number(),
-			expected: `{"type":["number"]}`,
+			expected: `{"type":"number"}`,
 		},
 		{
 			name:     "should create boolean schema",
 			schema:   oas.Boolean(),
-			expected: `{"type":["boolean"]}`,
+			expected: `{"type":"boolean"}`,
 		},
 		{
 			name:     "should create object schema",
 			schema:   oas.Object(),
-			expected: `{"type":["object"]}`,
+			expected: `{"type":"object"}`,
 		},
 		{
 			name:     "should create array schema",
 			schema:   oas.Array(),
-			expected: `{"type":["array"]}`,
+			expected: `{"type":"array"}`,
 		},
 		{
 			name:     "should create null schema",
 			schema:   oas.Null(),
-			expected: `{"type":["null"]}`,
+			expected: `{"type":"null"}`,
 		},
 		{
 			name:     "should support chaining nullable on string",
 			schema:   oas.String().Nullable(),
-			expected: `{"type":["string","null"]}`,
+			expected: `{"type":"string","nullable":true}`,
 		},
 	}
 

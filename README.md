@@ -39,6 +39,7 @@ make test
 | [**mut**](./mut)           | Tracks partial JSON updates to distinguish missing fields from zero-values.  |      [![coverage](.public/mut-coverage.svg)](./mut)      |
 | [**oas**](./oas)           | OpenAPI (Swagger) builder for complex filtering, sorting, and pagination.    |      [![coverage](.public/oas-coverage.svg)](./oas)      |
 | [**search**](./search)     | Generic query builder for complex filtering, sorting, and pagination.        |   [![coverage](.public/search-coverage.svg)](./search)   |
+| [**util**](./util)         | Atomic, generic utility functions to simplify common Go patterns.            |     [![coverage](.public/util-coverage.svg)](./util)     |
 | [**validate**](./validate) | Generic validator for complex filtering, sorting, and pagination.            | [![coverage](.public/validate-coverage.svg)](./validate) |
 
 ## Philosophy

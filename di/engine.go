@@ -7,12 +7,14 @@ import (
 
 // resolveByType finds the registered provider and triggers the build process.
 func resolveByType(targetType reflect.Type) reflect.Value {
+	logDebug("Resolving %v", targetType)
+
 	registryMutex.RLock()
 	providers := providerRegistry[targetType]
 	registryMutex.RUnlock()
 
 	if len(providers) == 0 {
-		panic(fmt.Sprintf("di: no provider registered for type %v", targetType))
+		fail(fmt.Sprintf("di: no provider registered for type %v", targetType))
 	}
 
 	return buildInstance(providers[0])

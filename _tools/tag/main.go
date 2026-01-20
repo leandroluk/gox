@@ -143,14 +143,22 @@ func pushTags(version string, modules []string) {
 }
 
 func deleteTags(version string, modules []string) {
-	fmt.Printf("Deleting tag %s...\n", version)
-	run("git", "tag", "-d", version)
+	if tagExists(version) {
+		fmt.Printf("Deleting tag %s...\n", version)
+		run("git", "tag", "-d", version)
+	} else {
+		fmt.Printf("Tag %s not found locally, skipping delete.\n", version)
+	}
 	run("git", "push", "origin", ":refs/tags/"+version)
 
 	runParallel(modules, 5, func(mod string) {
 		tag := fmt.Sprintf("%s/%s", mod, version)
-		fmt.Printf("Deleting tag %s...\n", tag)
-		run("git", "tag", "-d", tag)
+		if tagExists(tag) {
+			fmt.Printf("Deleting tag %s...\n", tag)
+			run("git", "tag", "-d", tag)
+		} else {
+			fmt.Printf("Tag %s not found locally, skipping delete.\n", tag)
+		}
 		run("git", "push", "origin", ":refs/tags/"+tag)
 	})
 

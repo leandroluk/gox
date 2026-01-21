@@ -45,3 +45,14 @@ func registerProvider(factoryFN any, isSingleton bool, asType reflect.Type) {
 	defer registryMutex.Unlock()
 	providerRegistry[outputType] = append(providerRegistry[outputType], providerInstance)
 }
+
+var fallbackHandlers []func(reflect.Type) (any, bool)
+
+// registerFallbackHandler sets a function that is called when a provider is not found.
+// This allows for dynamic resolution of types that are not explicitly registered.
+// The handler should return an instance and a boolean indicating success.
+func registerFallbackHandler(handler func(requestType reflect.Type) (instance any, ok bool)) {
+	registryMutex.Lock()
+	defer registryMutex.Unlock()
+	fallbackHandlers = append(fallbackHandlers, handler)
+}

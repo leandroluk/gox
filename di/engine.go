@@ -14,6 +14,16 @@ func resolveByType(targetType reflect.Type) reflect.Value {
 	registryMutex.RUnlock()
 
 	if len(providers) == 0 {
+		registryMutex.RLock()
+		handlers := fallbackHandlers
+		registryMutex.RUnlock()
+
+		for _, handler := range handlers {
+			if instance, ok := handler(targetType); ok {
+				return reflect.ValueOf(instance)
+			}
+		}
+
 		fail(fmt.Sprintf("di: no provider registered for type %v", targetType))
 	}
 

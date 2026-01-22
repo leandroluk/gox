@@ -198,7 +198,7 @@ func (schemaValue *Schema[V]) validateValueFunc(context *engine.Context, basePat
 }
 
 func (schemaValue *Schema[V]) commitKeySchemaError(context *engine.Context, err error, entryPath string) bool {
-	var validationError issues.ValidationError
+	var validationError *issues.ValidationError
 	if !errors.As(err, &validationError) {
 		return addIssueAtPath(context, entryPath, CodeKeyInvalid, "invalid key", map[string]any{
 			"error": err.Error(),
@@ -218,7 +218,7 @@ func (schemaValue *Schema[V]) commitKeySchemaError(context *engine.Context, err 
 }
 
 func commitChildError(context *engine.Context, err error, basePath string) bool {
-	var validationError issues.ValidationError
+	var validationError *issues.ValidationError
 	if !errors.As(err, &validationError) {
 		return addIssueAtPath(context, basePath, CodeType, "invalid value", map[string]any{
 			"error": err.Error(),

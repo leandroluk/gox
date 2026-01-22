@@ -141,7 +141,7 @@ func (b *ArrayFieldBuilder[T]) build() *ArrayFieldBuilder[T] {
 			for i, item := range arr {
 				itemRes, err := b.itemSchema.ValidateAny(item, context.Options)
 				if err != nil {
-					if vErr, ok := err.(issues.ValidationError); ok {
+					if vErr, ok := err.(*issues.ValidationError); ok {
 						for _, issue := range vErr.Issues {
 							// Manually join path: basePath + "[" + i + "]" + issue.Path
 							// We can optimize common cases

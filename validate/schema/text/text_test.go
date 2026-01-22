@@ -110,7 +110,7 @@ func TestText_OneOf(t *testing.T) {
 		t.Fatalf("expected error, got nil")
 	}
 
-	var validationError issues.ValidationError
+	var validationError *issues.ValidationError
 	if !errors.As(err, &validationError) {
 		t.Fatalf("expected ValidationError, got %T: %v", err, err)
 	}

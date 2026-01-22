@@ -98,7 +98,7 @@ func (b *RecordFieldBuilder[T]) build() *RecordFieldBuilder[T] {
 				keyVal := ast.StringValue(key)
 				_, err := b.keySchema.ValidateAny(keyVal, context.Options)
 				if err != nil {
-					if vErr, ok := err.(issues.ValidationError); ok {
+					if vErr, ok := err.(*issues.ValidationError); ok {
 						for _, issue := range vErr.Issues {
 							context.AddIssueWithMeta("record.key", "invalid key", map[string]any{"key": key, "details": issue.Message})
 						}
@@ -110,7 +110,7 @@ func (b *RecordFieldBuilder[T]) build() *RecordFieldBuilder[T] {
 			if b.valueSchema != nil {
 				itemRes, err := b.valueSchema.ValidateAny(item, context.Options)
 				if err != nil {
-					if vErr, ok := err.(issues.ValidationError); ok {
+					if vErr, ok := err.(*issues.ValidationError); ok {
 						for _, issue := range vErr.Issues {
 							// Construct relative path for this item
 							// If key is "myKey", path is "myKey" or "myKey.subPath"

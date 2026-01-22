@@ -67,6 +67,9 @@ func (context *Context) AddIssueWithMeta(code string, message string, meta map[s
 }
 
 func (context *Context) Error() error {
+	if context.Issues.IsEmpty() {
+		return nil
+	}
 	if context.Options.Formatter != nil {
 		return issues.NewValidationErrorWithFormatter(context.Issues.Items(), context.Options.Formatter)
 	}

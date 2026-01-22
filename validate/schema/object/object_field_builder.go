@@ -129,7 +129,7 @@ func (b *ObjectFieldBuilder[T]) build() *ObjectFieldBuilder[T] {
 		if resErr != nil {
 			errCompat, _ := resErr.(error)
 
-			if vErr, ok := errCompat.(issues.ValidationError); ok {
+			if vErr, ok := errCompat.(*issues.ValidationError); ok {
 				// Rebase paths
 				basePath := context.PathString()
 				for _, issue := range vErr.Issues {

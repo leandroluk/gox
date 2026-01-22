@@ -58,7 +58,7 @@ func (s *AnyOfSchema[T]) validateWithOptions(input any, options schema.Options) 
 			return output, nil
 		}
 
-		var validationError issues.ValidationError
+		var validationError *issues.ValidationError
 		if !errors.As(err, &validationError) {
 			return zero, err
 		}

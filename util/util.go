@@ -28,3 +28,10 @@ func Try(fn func()) (err error) {
 	fn()
 	return nil
 }
+
+// Check panics if err is non-nil.
+func Check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

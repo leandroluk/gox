@@ -98,7 +98,6 @@ func getLatestTag() string {
 
 func bumpVersion(ver, level string) string {
 	// Remove v prefix if exists
-	hasV := strings.HasPrefix(ver, "v")
 	cleanVer := strings.TrimPrefix(ver, "v")
 
 	parts := strings.Split(cleanVer, ".")
@@ -122,10 +121,7 @@ func bumpVersion(ver, level string) string {
 	}
 
 	newVer := fmt.Sprintf("%d.%d.%d", major, minor, patch)
-	if hasV {
-		return "v" + newVer
-	}
-	return newVer
+	return "v" + newVer
 }
 
 func readModulesFromGoWork() []string {

@@ -10,8 +10,8 @@ func TestBumpVersion(t *testing.T) {
 	}{
 		{"v0.7.10", "minor", "v0.8.0"},
 		{"v0.7.10", "patch", "v0.7.11"},
-		{"0.7.10", "minor", "0.8.0"},
-		{"0.7.10", "patch", "0.7.11"},
+		{"0.7.10", "minor", "v0.8.0"},
+		{"0.7.10", "patch", "v0.7.11"},
 		{"v1.0.0", "minor", "v1.1.0"},
 		{"v1.0.0", "patch", "v1.0.1"},
 		{"v0.1", "patch", "v0.1.1"}, // Handles short versions by appending 0?

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -14,39 +15,117 @@ func main() {
 	create := flag.Bool("create", false, "Create tags")
 	push := flag.Bool("push", false, "Push tags to remote")
 	delete := flag.Bool("delete", false, "Delete tags locally and remotely")
+	bump := flag.String("bump", "", "Bump version: 'minor' (2nd number) or 'patch' (3rd number)")
 	flag.Parse()
 
-	if !*create && !*push && !*delete {
-		fmt.Println("Usage: go run . --create|--push|--delete <version>")
-		fmt.Println("Example: go run . --create v0.2.0")
-		os.Exit(1)
+	// If bump is specified, we need to infer the version from the latest git tag
+	var version string
+	var oldVersion string
+	if *bump != "" {
+		if *bump != "minor" && *bump != "patch" {
+			fmt.Println("Error: --bump must be 'minor' or 'patch'")
+			os.Exit(1)
+		}
+
+		latest := getLatestTag()
+		if latest == "" {
+			fmt.Println("Error: could not find any existing tags to bump from")
+			os.Exit(1)
+		}
+		oldVersion = latest
+		version = bumpVersion(latest, *bump)
+		fmt.Printf("Bumping version form %s to %s (level: %s)\n", oldVersion, version, *bump)
+
+		// When bumping, we implicitly assume we want to create and push the new tag
+		// AND delete the old tag as per requirements ("costumo remover a tag anterior")
+		// The requirements say: "criando uma nova tag (usando o tag-create e tag-push) e em seguida removendo a anterior (tag-delete)"
+		*create = true
+		*push = true
+		*delete = true
+	} else {
+		args := flag.Args()
+		if len(args) < 1 || args[0] == "" {
+			if !*create && !*push && !*delete {
+				fmt.Println("Usage: go run . [--bump minor|patch] | [--create|--push|--delete <version>]")
+				os.Exit(1)
+			}
+			fmt.Println("Error: version is required unless --bump is used")
+			os.Exit(1)
+		}
+		version = args[0]
 	}
 
-	args := flag.Args()
-	if len(args) < 1 || args[0] == "" {
-		fmt.Println("Error: version is required")
-		fmt.Println("Example: go run . --create v0.2.0")
-		os.Exit(1)
-	}
-
-	version := args[0]
 	modules := readModulesFromGoWork()
 
 	if len(modules) == 0 {
 		fmt.Println("Warning: no modules found in go.work")
 	}
 
+	// 1. Create new tags (if requested)
 	if *create {
 		createTags(version, modules)
 	}
 
+	// 2. Push new tags (if requested)
 	if *push {
 		pushTags(version, modules)
 	}
 
+	// 3. Delete old tags (if bumping, we delete the OLD version)
+	// If NOT bumping, but --delete was passed, we delete the PASSED version.
 	if *delete {
-		deleteTags(version, modules)
+		targetDeleteVersion := version
+		if *bump != "" {
+			targetDeleteVersion = oldVersion
+		}
+
+		if targetDeleteVersion != "" {
+			deleteTags(targetDeleteVersion, modules)
+		}
 	}
+}
+
+func getLatestTag() string {
+	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0")
+	out, err := cmd.Output()
+	if err != nil {
+		// Try fallback to just getting the last tag appropriately if describe fails (e.g. shallow clone)
+		// But usually describe --tags --abbrev=0 is best.
+		return ""
+	}
+	return strings.TrimSpace(string(out))
+}
+
+func bumpVersion(ver, level string) string {
+	// Remove v prefix if exists
+	hasV := strings.HasPrefix(ver, "v")
+	cleanVer := strings.TrimPrefix(ver, "v")
+
+	parts := strings.Split(cleanVer, ".")
+	if len(parts) < 3 {
+		// Handle cases like "0.1" -> treat as "0.1.0"
+		for len(parts) < 3 {
+			parts = append(parts, "0")
+		}
+	}
+
+	major, _ := strconv.Atoi(parts[0])
+	minor, _ := strconv.Atoi(parts[1])
+	patch, _ := strconv.Atoi(parts[2])
+
+	switch level {
+	case "minor": // bumping 2nd number
+		minor++
+		patch = 0
+	case "patch": // bumping 3rd number
+		patch++
+	}
+
+	newVer := fmt.Sprintf("%d.%d.%d", major, minor, patch)
+	if hasV {
+		return "v" + newVer
+	}
+	return newVer
 }
 
 func readModulesFromGoWork() []string {
@@ -121,7 +200,7 @@ func createTags(version string, modules []string) {
 		mustRun("git", "tag", tag)
 	})
 
-	fmt.Println("All tags processed successfully.")
+	fmt.Println("All tags creation processed.")
 }
 
 func tagExists(tag string) bool {

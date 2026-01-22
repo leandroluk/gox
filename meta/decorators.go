@@ -19,8 +19,15 @@ func (d exampleDecorator) applyToField(m *FieldMetadata)          { m.Example = 
 // Throws documents potential errors.
 type throwsDecorator ThrowsMetadata
 
-func Throws[T any](desc string) throwsDecorator {
-	return throwsDecorator{ErrorType: reflect.TypeFor[T](), Description: desc}
+func Throws[T error](optionalDescription ...string) throwsDecorator {
+	description := (*new(T)).Error()
+	if len(optionalDescription) > 0 {
+		description = optionalDescription[0]
+	}
+	return throwsDecorator{
+		ErrorType:   reflect.TypeFor[T](),
+		Description: description,
+	}
 }
 func (d throwsDecorator) applyToObject(_ any, m *ObjectMetadata) {
 	m.Throws = append(m.Throws, ThrowsMetadata(d))

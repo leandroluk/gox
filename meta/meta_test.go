@@ -14,6 +14,12 @@ type MainStruct struct {
 	Pointer *SubStruct
 }
 
+type MyError struct{}
+
+func (e MyError) Error() string {
+	return "Unauthorized access"
+}
+
 func TestMeta_Resolution(t *testing.T) {
 	// Instance used for address resolution
 	// Note: We initialize pointers to ensure they are addressable in memory
@@ -66,7 +72,6 @@ func TestMeta_Resolution(t *testing.T) {
 }
 
 func TestMeta_Throws(t *testing.T) {
-	type MyError struct{}
 
 	Describe(&MainStruct{},
 		Throws[MyError]("Unauthorized access"),

@@ -47,7 +47,7 @@ func (e *ValidationError) Unwrap() []error {
 }
 
 func (e *ValidationError) Error() string {
-	if len(e.Issues) == 0 {
+	if e == nil || len(e.Issues) == 0 {
 		return ""
 	}
 	if len(e.Issues) == 1 {

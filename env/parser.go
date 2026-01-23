@@ -35,7 +35,7 @@ func loadEnvFile(filePath string) error {
 // parseEnvLine extracts key and value, handling spaces, quotes and comments.
 func parseEnvLine(rawLine string) (string, string, bool) {
 	line := strings.TrimSpace(rawLine)
-	if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
+	if line == "" || strings.HasPrefix(line, "#") {
 		return "", "", false
 	}
 
@@ -43,13 +43,13 @@ func parseEnvLine(rawLine string) (string, string, bool) {
 		line = strings.TrimSpace(line[len("export "):])
 	}
 
-	equalIndex := strings.Index(line, "=")
-	if equalIndex < 0 {
+	before, after, ok := strings.Cut(line, "=")
+	if !ok {
 		return "", "", false
 	}
 
-	key := strings.TrimSpace(line[:equalIndex])
-	value := strings.TrimSpace(line[equalIndex+1:])
+	key := strings.TrimSpace(before)
+	value := strings.TrimSpace(after)
 	value = stripInlineComments(value)
 
 	// Remove surrounding quotes
@@ -81,7 +81,7 @@ func stripInlineComments(value string) string {
 		if inQuotes {
 			continue
 		}
-		if char == '#' || (char == '/' && i+1 < len(value) && value[i+1] == '/') {
+		if char == '#' {
 			return strings.TrimSpace(value[:i])
 		}
 	}

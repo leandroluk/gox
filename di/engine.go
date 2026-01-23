@@ -15,7 +15,7 @@ func resolveByType(targetType reflect.Type) reflect.Value {
 
 	if len(providers) == 0 {
 		registryMutex.RLock()
-		handlers := fallbackHandlers
+		handlers := make([]func(reflect.Type) (any, bool), 0)
 		registryMutex.RUnlock()
 
 		for _, handler := range handlers {

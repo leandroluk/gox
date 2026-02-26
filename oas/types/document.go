@@ -25,7 +25,7 @@ type Document struct {
 	externalDocs      *ExternalDocs
 }
 
-func New() *Document {
+func NewDocument() *Document {
 	return &Document{}
 }
 

@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// Exemplo usando RequiredProperty e OptionalProperty
-	doc := types.New().
+	doc := types.NewDocument().
 		OpenAPI("3.0.3").
 		Info(func(i *types.Info) {
 			i.Title("Example API").Version("1.0.0")

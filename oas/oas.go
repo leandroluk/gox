@@ -163,7 +163,7 @@ type Xml = types.Xml
 // New creates a new OpenAPI document with default values.
 // The document will have openapi set to "3.0.3" by default when marshaled.
 func New() *Document {
-	return types.New()
+	return types.NewDocument()
 }
 
 // String creates a new string schema.

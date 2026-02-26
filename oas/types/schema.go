@@ -64,31 +64,31 @@ func (s *Schema) Type(values ...enums.SchemaType) *Schema {
 
 // Type helpers
 func (s *Schema) String() *Schema {
-	return s.Type(enums.SchemaString)
+	return s.Type(enums.SchemaSTRING)
 }
 
 func (s *Schema) Object() *Schema {
-	return s.Type(enums.SchemaObject)
+	return s.Type(enums.SchemaOBJECT)
 }
 
 func (s *Schema) Array() *Schema {
-	return s.Type(enums.SchemaArray)
+	return s.Type(enums.SchemaARRAY)
 }
 
 func (s *Schema) Integer() *Schema {
-	return s.Type(enums.SchemaInteger)
+	return s.Type(enums.SchemaINTEGER)
 }
 
 func (s *Schema) Number() *Schema {
-	return s.Type(enums.SchemaNumber)
+	return s.Type(enums.SchemaNUMBER)
 }
 
 func (s *Schema) Boolean() *Schema {
-	return s.Type(enums.SchemaBoolean)
+	return s.Type(enums.SchemaBOOLEAN)
 }
 
 func (s *Schema) Null() *Schema {
-	return s.Type(enums.SchemaNull)
+	return s.Type(enums.SchemaNULL)
 }
 
 func (s *Schema) Nullable() *Schema {

@@ -10,7 +10,9 @@ type MediaType struct {
 	encoding map[string]*Encoding
 }
 
-func (m *MediaType) Schema(build func(s *Schema)) *MediaType {
+type MediaTypeFn func(m *MediaType)
+
+func (m *MediaType) Schema(build MediaTypeFn) *MediaType {
 	if m.schema == nil {
 		m.schema = &Schema{}
 	}

@@ -22,30 +22,30 @@ type SchemaType string
 
 // JSON Schema type constants as defined in OpenAPI 3.1.
 const (
-	// SchemaObject represents an object/map type.
+	// SchemaOBJECT represents an object/map type.
 	// Objects have properties and can have additional constraints like required fields.
-	SchemaObject SchemaType = "object"
+	SchemaOBJECT SchemaType = "object"
 
-	// SchemaString represents a string type.
+	// SchemaSTRING represents a string type.
 	// Can have constraints like minLength, maxLength, pattern, and format.
-	SchemaString SchemaType = "string"
+	SchemaSTRING SchemaType = "string"
 
-	// SchemaInteger represents an integer type (whole numbers).
+	// SchemaINTEGER represents an integer type (whole numbers).
 	// Can have constraints like minimum, maximum, and multipleOf.
-	SchemaInteger SchemaType = "integer"
+	SchemaINTEGER SchemaType = "integer"
 
-	// SchemaNumber represents a number type (includes decimals).
+	// SchemaNUMBER represents a number type (includes decimals).
 	// Can have constraints like minimum, maximum, and multipleOf.
-	SchemaNumber SchemaType = "number"
+	SchemaNUMBER SchemaType = "number"
 
-	// SchemaBoolean represents a boolean type (true/false).
-	SchemaBoolean SchemaType = "boolean"
+	// SchemaBOOLEAN represents a boolean type (true/false).
+	SchemaBOOLEAN SchemaType = "boolean"
 
-	// SchemaArray represents an array/list type.
+	// SchemaARRAY represents an array/list type.
 	// Must specify items schema and can have minItems, maxItems, uniqueItems.
-	SchemaArray SchemaType = "array"
+	SchemaARRAY SchemaType = "array"
 
-	// SchemaNull represents a null value.
+	// SchemaNULL represents a null value.
 	// Often combined with other types for nullable fields, e.g., ["string", "null"].
-	SchemaNull SchemaType = "null"
+	SchemaNULL SchemaType = "null"
 )

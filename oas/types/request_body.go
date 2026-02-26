@@ -18,7 +18,7 @@ func (r *RequestBody) Description(value string) *RequestBody {
 	return r
 }
 
-func (r *RequestBody) Content(name enums.ContentType, build func(m *MediaType)) *RequestBody {
+func (r *RequestBody) Content(name enums.ContentType, b MediaTypeFn) *RequestBody {
 	if r.content == nil {
 		r.content = make(map[enums.ContentType]*MediaType)
 	}
@@ -27,28 +27,24 @@ func (r *RequestBody) Content(name enums.ContentType, build func(m *MediaType)) 
 		m = &MediaType{}
 		r.content[name] = m
 	}
-	if build != nil {
-		build(m)
+	if b != nil {
+		b(m)
 	}
 	return r
 }
 
-// Content type helpers
-func (r *RequestBody) Json(build func(m *MediaType)) *RequestBody {
-	return r.Content(enums.ContentJson, build)
-}
-
-func (r *RequestBody) Xml(build func(m *MediaType)) *RequestBody {
-	return r.Content(enums.ContentXml, build)
-}
-
-func (r *RequestBody) Form(build func(m *MediaType)) *RequestBody {
-	return r.Content(enums.ContentForm, build)
-}
-
-func (r *RequestBody) Multipart(build func(m *MediaType)) *RequestBody {
-	return r.Content(enums.ContentMultipart, build)
-}
+func (r *RequestBody) Json(b MediaTypeFn) *RequestBody  { return r.Content(enums.ContentJSON, b) }
+func (r *RequestBody) Xml(b MediaTypeFn) *RequestBody   { return r.Content(enums.ContentXML, b) }
+func (r *RequestBody) Form(b MediaTypeFn) *RequestBody  { return r.Content(enums.ContentFORM, b) }
+func (r *RequestBody) Multi(b MediaTypeFn) *RequestBody { return r.Content(enums.ContentMULTI, b) }
+func (r *RequestBody) Html(b MediaTypeFn) *RequestBody  { return r.Content(enums.ContentHTML, b) }
+func (r *RequestBody) Plain(b MediaTypeFn) *RequestBody { return r.Content(enums.ContentPLAIN, b) }
+func (r *RequestBody) Csv(b MediaTypeFn) *RequestBody   { return r.Content(enums.ContentCSV, b) }
+func (r *RequestBody) Jpeg(b MediaTypeFn) *RequestBody  { return r.Content(enums.ContentJPEG, b) }
+func (r *RequestBody) Png(b MediaTypeFn) *RequestBody   { return r.Content(enums.ContentPNG, b) }
+func (r *RequestBody) Gif(b MediaTypeFn) *RequestBody   { return r.Content(enums.ContentGIF, b) }
+func (r *RequestBody) Svg(b MediaTypeFn) *RequestBody   { return r.Content(enums.ContentSVG, b) }
+func (r *RequestBody) Webp(b MediaTypeFn) *RequestBody  { return r.Content(enums.ContentWEBP, b) }
 
 func (r *RequestBody) Required(value bool) *RequestBody {
 	r.required = &value

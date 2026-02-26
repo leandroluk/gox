@@ -19,7 +19,7 @@ func (r *Response) Description(value string) *Response {
 	return r
 }
 
-func (r *Response) Content(name enums.ContentType, build func(m *MediaType)) *Response {
+func (r *Response) Content(name enums.ContentType, b MediaTypeFn) *Response {
 	if r.content == nil {
 		r.content = make(map[enums.ContentType]*MediaType)
 	}
@@ -28,28 +28,24 @@ func (r *Response) Content(name enums.ContentType, build func(m *MediaType)) *Re
 		m = &MediaType{}
 		r.content[name] = m
 	}
-	if build != nil {
-		build(m)
+	if b != nil {
+		b(m)
 	}
 	return r
 }
 
-// Content type helpers
-func (r *Response) Json(build func(m *MediaType)) *Response {
-	return r.Content(enums.ContentJson, build)
-}
-
-func (r *Response) Xml(build func(m *MediaType)) *Response {
-	return r.Content(enums.ContentXml, build)
-}
-
-func (r *Response) Html(build func(m *MediaType)) *Response {
-	return r.Content(enums.ContentHtml, build)
-}
-
-func (r *Response) Plain(build func(m *MediaType)) *Response {
-	return r.Content(enums.ContentPlain, build)
-}
+func (r *Response) Json(b MediaTypeFn) *Response  { return r.Content(enums.ContentJSON, b) }
+func (r *Response) Xml(b MediaTypeFn) *Response   { return r.Content(enums.ContentXML, b) }
+func (r *Response) Form(b MediaTypeFn) *Response  { return r.Content(enums.ContentFORM, b) }
+func (r *Response) Multi(b MediaTypeFn) *Response { return r.Content(enums.ContentMULTI, b) }
+func (r *Response) Html(b MediaTypeFn) *Response  { return r.Content(enums.ContentHTML, b) }
+func (r *Response) Plain(b MediaTypeFn) *Response { return r.Content(enums.ContentPLAIN, b) }
+func (r *Response) Csv(b MediaTypeFn) *Response   { return r.Content(enums.ContentCSV, b) }
+func (r *Response) Jpeg(b MediaTypeFn) *Response  { return r.Content(enums.ContentJPEG, b) }
+func (r *Response) Png(b MediaTypeFn) *Response   { return r.Content(enums.ContentPNG, b) }
+func (r *Response) Gif(b MediaTypeFn) *Response   { return r.Content(enums.ContentGIF, b) }
+func (r *Response) Svg(b MediaTypeFn) *Response   { return r.Content(enums.ContentSVG, b) }
+func (r *Response) Webp(b MediaTypeFn) *Response  { return r.Content(enums.ContentWEBP, b) }
 
 func (r *Response) Header(name string, build func(h *Header)) *Response {
 	if r.headers == nil {

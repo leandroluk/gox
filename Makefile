@@ -16,19 +16,20 @@ BADGE_TOOL_PKG ?= ./_tools/badge
 .PHONY: help
 help:
 	@echo "Targets:"
-	@echo "  make test            # go test em todos os módulos"
-	@echo "  make cover           # gera $(COVERPROFILE_ALL)"
-	@echo "  make badge           # gera $(BADGE_DIR)/coverage.svg"
-	@echo "  make module-badges   # gera $(BADGE_DIR)/*-coverage.svg"
-	@echo "  make badges          # geral + por módulo"
-	@echo "  make ci              # test + badges"
-	@echo "  make clean           # remove profiles e svgs"
-	@echo "  make tag <version>       # cria e sobe tags git (ex: make tag v0.2.0)"
+	@echo "  make test                 # go test em todos os módulos"
+	@echo "  make cover                # gera $(COVERPROFILE_ALL)"
+	@echo "  make badge                # gera $(BADGE_DIR)/coverage.svg"
+	@echo "  make module-badges        # gera $(BADGE_DIR)/*-coverage.svg"
+	@echo "  make badges               # geral + por módulo"
+	@echo "  make ci                   # test + badges"
+	@echo "  make clean                # remove profiles e svgs"
+	@echo "  make tag <version>        # cria e sobe tags git (ex: make tag v0.2.0)"
 	@echo "  make tag-create <version> # apenas cria tags localmente"
 	@echo "  make tag-push <version>   # apenas envia tags para remote"
 	@echo "  make tag-delete <version> # deleta tags local e remotamente"
 	@echo "  make tag-minor            # aumenta o patch (ex: v0.7.10 -> v0.7.11) e remove anterior"
 	@echo "  make tag-major            # aumenta o minor (ex: v0.7.10 -> v0.8.0) e remove anterior"
+	@echo "  make tag-purge            # remove tag's anteriores e depreciadas"
 
 .PHONY: test
 test:
@@ -97,6 +98,10 @@ tag-minor:
 .PHONY: tag-major
 tag-major:
 	$(GO) run ./_tools/tag --bump minor
+
+.PHONY: tag-purge
+tag-purge:
+	pwsh -Command "git tag | Where-Object { \$$_ -notmatch '$(filter-out $@,$(MAKECMDGOALS))\$$' } | ForEach-Object { git push origin --delete \$$_; git tag -d \$$_ }"
 
 %:
 	@:

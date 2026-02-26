@@ -1,9 +1,9 @@
-// github.com/leandroluk/gox/oas/wrap/fiber/params.go
-package wrap
+// github.com/leandroluk/gox/oas/adapter/fiber/params.go
+package adapter
 
 import "regexp"
 
-// extractPathParams extracts path parameter names in Fiber format.
+// ExtractPathParams extracts path parameter names in Fiber format.
 // Supports normal parameters (:param) and optional ones (:param?).
 //
 // Examples:
@@ -11,7 +11,7 @@ import "regexp"
 //	/users/:id           → ["id"]
 //	/users/:id/:field    → ["id", "field"]
 //	/files/:name?        → ["name"]
-func (g *Group) extractPathParams(routePath string) []string {
+func (g *Group) ExtractPathParams(routePath string) []string {
 	re := regexp.MustCompile(`:([a-zA-Z0-9_]+)\??`)
 	matches := re.FindAllStringSubmatch(routePath, -1)
 

@@ -1,5 +1,5 @@
-// github.com/leandroluk/gox/oas/wrap/fiber/fiber.go
-package wrap
+// github.com/leandroluk/gox/oas/adapter/fiber/fiber.go
+package adapter
 
 import (
 	"regexp"
@@ -14,8 +14,8 @@ type App struct {
 	document *oas.Document
 }
 
-// Adapter creates a new App with OAS features
-func Adapter(app *fiber.App) *App {
+// Wrap creates a new App with OAS features
+func Wrap(app *fiber.App) *App {
 	return &App{
 		App:      app,
 		document: oas.New(),
@@ -47,13 +47,13 @@ func (a *App) Group(prefix string, handlers ...fiber.Handler) *Group {
 	}
 }
 
-// fiberPathToOAS converts Fiber paths to OpenAPI format.
+// FiberPathToOAS converts Fiber paths to OpenAPI format.
 // Examples:
 //
 //	/users/:id        → /users/{id}
 //	/users/:id?       → /users/{id}   (optional Fiber parameters)
 //	/users/:id/:field → /users/{id}/{field}
-func fiberPathToOAS(path string) string {
+func FiberPathToOAS(path string) string {
 	re := regexp.MustCompile(`:([a-zA-Z0-9_]+)\??`)
 	return re.ReplaceAllString(path, `{$1}`)
 }

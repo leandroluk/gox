@@ -328,249 +328,250 @@ func main() {
     })
 
   // Paths
-  doc.
+  doc.Path("/products", func(p *types.Path) {
     // GET /products - List with pagination and filters
-    Path("/products", func(p *types.Path) {
-      p.Get(func(o *types.Operation) {
-        o.Summary("List products").
-          Description("Returns paginated list of products with optional filters").
-          Tags("Products").
-          Parameter(func(param *types.Parameter) {
-            param.Name("page").
-              In("query").
-              Description("Page number").
-              Schema(func(s *types.Schema) {
-                s.Integer().Minimum(1).Default(1)
+    p.Get(func(o *types.Operation) {
+      o.Summary("List products").
+        Description("Returns paginated list of products with optional filters").
+        Tags("Products").
+        Parameter(func(param *types.Parameter) {
+          param.Name("page").
+            In("query").
+            Description("Page number").
+            Schema(func(s *types.Schema) {
+              s.Integer().Minimum(1).Default(1)
+            })
+        }).
+        Parameter(func(param *types.Parameter) {
+          param.Name("perPage").
+            In("query").
+            Description("Items per page").
+            Schema(func(s *types.Schema) {
+              s.Integer().Minimum(1).Maximum(100).Default(20)
+            })
+        }).
+        Parameter(func(param *types.Parameter) {
+          param.Name("category").
+            In("query").
+            Schema(func(s *types.Schema) { s.String() })
+        }).
+        Parameter(func(param *types.Parameter) {
+          param.Name("search").
+            In("query").
+            Description("Search in name and description").
+            Schema(func(s *types.Schema) { s.String() })
+        }).
+        Response("200", func(r *types.Response) {
+          r.Description("Successful response").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/PaginatedProducts")
               })
-          }).
-          Parameter(func(param *types.Parameter) {
-            param.Name("perPage").
-              In("query").
-              Description("Items per page").
-              Schema(func(s *types.Schema) {
-                s.Integer().Minimum(1).Maximum(100).Default(20)
+            })
+        }).
+        Response("400", func(r *types.Response) {
+          r.Description("Invalid parameters").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/Error")
               })
-          }).
-          Parameter(func(param *types.Parameter) {
-            param.Name("category").
-              In("query").
-              Schema(func(s *types.Schema) { s.String() })
-          }).
-          Parameter(func(param *types.Parameter) {
-            param.Name("search").
-              In("query").
-              Description("Search in name and description").
-              Schema(func(s *types.Schema) { s.String() })
-          }).
-          Response("200", func(r *types.Response) {
-            r.Description("Successful response").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/PaginatedProducts")
-                })
-              })
-          }).
-          Response("400", func(r *types.Response) {
-            r.Description("Invalid parameters").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/Error")
-                })
-              })
-          })
-      })
-
-      // POST /products - Create product (requires auth)
-      p.Post(func(o *types.Operation) {
-        o.Summary("Create product").
-          Description("Creates a new product in the catalog").
-          Tags("Products").
-          UseBearerToken("bearer", "products:write").
-          RequestBody(func(rb *types.RequestBody) {
-            rb.Required(true).
-              Description("Product data").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/ProductInput")
-                })
-              }).
-              Xml(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/ProductInput")
-                })
-              })
-          }).
-          Response("201", func(r *types.Response) {
-            r.Description("Product created successfully").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/Product")
-                })
-              })
-          }).
-          Response("400", func(r *types.Response) {
-            r.Description("Validation error").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/Error")
-                })
-              })
-          }).
-          Response("401", func(r *types.Response) {
-            r.Description("Unauthorized")
-          }).
-          Response("409", func(r *types.Response) {
-            r.Description("Product already exists")
-          })
-      })
-    }).
-    // GET /products/{id}
-    Path("/products/{id}", func(p *types.Path) {
-      p.Get(func(o *types.Operation) {
-        o.Summary("Get product by ID").
-          Tags("Products").
-          Parameter(func(param *types.Parameter) {
-            param.Name("id").
-              In("path").
-              Required(true).
-              Description("Product ID").
-              Schema(func(s *types.Schema) {
-                s.String().Format("uuid")
-              })
-          }).
-          Response("200", func(r *types.Response) {
-            r.Description("Product found").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/Product")
-                }).
-                Example(map[string]any{
-                  "id":          "550e8400-e29b-41d4-a716-446655440000",
-                  "name":        "Wireless Headphones",
-                  "description": "Premium quality",
-                  "price":       149.99,
-                  "stock":       245,
-                  "active":      true,
-                })
-              })
-          }).
-          Response("404", func(r *types.Response) {
-            r.Description("Product not found").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/Error")
-                })
-              })
-          })
-      })
-
-      // PATCH /products/{id} - Update (requires auth)
-      p.Patch(func(o *types.Operation) {
-        o.Summary("Update product").
-          Tags("Products").
-          UseBearerToken("bearer", "products:write").
-          Parameter(func(param *types.Parameter) {
-            param.Name("id").
-              In("path").
-              Required(true).
-              Schema(func(s *types.Schema) {
-                s.String().Format("uuid")
-              })
-          }).
-          RequestBody(func(rb *types.RequestBody) {
-            rb.Required(true).
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/ProductInput")
-                })
-              })
-          }).
-          Response("200", func(r *types.Response) {
-            r.Description("Updated successfully").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/Product")
-                })
-              })
-          }).
-          Response("404", func(r *types.Response) {
-            r.Description("Product not found")
-          }).
-          Response("401", func(r *types.Response) {
-            r.Description("Unauthorized")
-          })
-      })
-
-      // DELETE /products/{id} - Delete (requires auth)
-      p.Delete(func(o *types.Operation) {
-        o.Summary("Delete product").
-          Tags("Products").
-          UseBearerToken("bearer", "products:delete").
-          Parameter(func(param *types.Parameter) {
-            param.Name("id").
-              In("path").
-              Required(true).
-              Schema(func(s *types.Schema) {
-                s.String().Format("uuid")
-              })
-          }).
-          Response("204", func(r *types.Response) {
-            r.Description("Deleted successfully")
-          }).
-          Response("404", func(r *types.Response) {
-            r.Description("Product not found")
-          }).
-          Response("401", func(r *types.Response) {
-            r.Description("Unauthorized")
-          })
-      })
-    }).
-    // POST /orders - Create order (requires auth)
-    Path("/orders", func(p *types.Path) {
-      p.Post(func(o *types.Operation) {
-        o.Summary("Create order").
-          Description("Creates a new order for the authenticated customer").
-          Tags("Orders").
-          UseBearerToken("bearer", "orders:create").
-          RequestBody(func(rb *types.RequestBody) {
-            rb.Required(true).
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Object().
-                    Required("items").
-                    Property("items", func(items *types.Schema) {
-                      items.Array().
-                        MinItems(1).
-                        Items(func(item *types.Schema) {
-                          item.Object().
-                            Required("productId", "quantity").
-                            Property("productId", func(id *types.Schema) {
-                              id.String().Format("uuid")
-                            }).
-                            Property("quantity", func(q *types.Schema) {
-                              q.Integer().Minimum(1).Maximum(100)
-                            })
-                        })
-                    })
-                })
-              })
-          }).
-          Response("201", func(r *types.Response) {
-            r.Description("Order created").
-              Json(func(m *types.MediaType) {
-                m.Schema(func(s *types.Schema) {
-                  s.Ref("#/components/schemas/Order")
-                })
-              })
-          }).
-          Response("400", func(r *types.Response) {
-            r.Description("Validation error")
-          }).
-          Response("401", func(r *types.Response) {
-            r.Description("Unauthorized")
-          })
-      })
+            })
+        })
     })
+
+    // POST /products - Create product (requires auth)
+    p.Post(func(o *types.Operation) {
+      o.Summary("Create product").
+        Description("Creates a new product in the catalog").
+        Tags("Products").
+        UseBearerToken("bearer", "products:write").
+        RequestBody(func(rb *types.RequestBody) {
+          rb.Required(true).
+            Description("Product data").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/ProductInput")
+              })
+            }).
+            Xml(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/ProductInput")
+              })
+            })
+        }).
+        Response("201", func(r *types.Response) {
+          r.Description("Product created successfully").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/Product")
+              })
+            })
+        }).
+        Response("400", func(r *types.Response) {
+          r.Description("Validation error").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/Error")
+              })
+            })
+        }).
+        Response("401", func(r *types.Response) {
+          r.Description("Unauthorized")
+        }).
+        Response("409", func(r *types.Response) {
+          r.Description("Product already exists")
+        })
+    })
+  })
+
+  doc.Path("/products/{id}", func(p *types.Path) {
+    // GET /products/{id}
+    p.Get(func(o *types.Operation) {
+      o.Summary("Get product by ID").
+        Tags("Products").
+        Parameter(func(param *types.Parameter) {
+          param.Name("id").
+            In("path").
+            Required(true).
+            Description("Product ID").
+            Schema(func(s *types.Schema) {
+              s.String().Format("uuid")
+            })
+        }).
+        Response("200", func(r *types.Response) {
+          r.Description("Product found").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/Product")
+              }).
+              Example(map[string]any{
+                "id":          "550e8400-e29b-41d4-a716-446655440000",
+                "name":        "Wireless Headphones",
+                "description": "Premium quality",
+                "price":       149.99,
+                "stock":       245,
+                "active":      true,
+              })
+            })
+        }).
+        Response("404", func(r *types.Response) {
+          r.Description("Product not found").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/Error")
+              })
+            })
+        })
+    })
+
+    // PATCH /products/{id} - Update (requires auth)
+    p.Patch(func(o *types.Operation) {
+      o.Summary("Update product").
+        Tags("Products").
+        UseBearerToken("bearer", "products:write").
+        Parameter(func(param *types.Parameter) {
+          param.Name("id").
+            In("path").
+            Required(true).
+            Schema(func(s *types.Schema) {
+              s.String().Format("uuid")
+            })
+        }).
+        RequestBody(func(rb *types.RequestBody) {
+          rb.Required(true).
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/ProductInput")
+              })
+            })
+        }).
+        Response("200", func(r *types.Response) {
+          r.Description("Updated successfully").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/Product")
+              })
+            })
+        }).
+        Response("404", func(r *types.Response) {
+          r.Description("Product not found")
+        }).
+        Response("401", func(r *types.Response) {
+          r.Description("Unauthorized")
+        })
+    })
+
+    // DELETE /products/{id} - Delete (requires auth)
+    p.Delete(func(o *types.Operation) {
+      o.Summary("Delete product").
+        Tags("Products").
+        UseBearerToken("bearer", "products:delete").
+        Parameter(func(param *types.Parameter) {
+          param.Name("id").
+            In("path").
+            Required(true).
+            Schema(func(s *types.Schema) {
+              s.String().Format("uuid")
+            })
+        }).
+        Response("204", func(r *types.Response) {
+          r.Description("Deleted successfully")
+        }).
+        Response("404", func(r *types.Response) {
+          r.Description("Product not found")
+        }).
+        Response("401", func(r *types.Response) {
+          r.Description("Unauthorized")
+        })
+    })
+  })
+
+  doc.Path("/orders", func(p *types.Path) {
+    // POST /orders - Create order (requires auth)
+    p.Post(func(o *types.Operation) {
+      o.Summary("Create order").
+        Description("Creates a new order for the authenticated customer").
+        Tags("Orders").
+        UseBearerToken("bearer", "orders:create").
+        RequestBody(func(rb *types.RequestBody) {
+          rb.Required(true).
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Object().
+                  Required("items").
+                  Property("items", func(items *types.Schema) {
+                    items.Array().
+                      MinItems(1).
+                      Items(func(item *types.Schema) {
+                        item.Object().
+                          Required("productId", "quantity").
+                          Property("productId", func(id *types.Schema) {
+                            id.String().Format("uuid")
+                          }).
+                          Property("quantity", func(q *types.Schema) {
+                            q.Integer().Minimum(1).Maximum(100)
+                          })
+                      })
+                  })
+              })
+            })
+        }).
+        Response("201", func(r *types.Response) {
+          r.Description("Order created").
+            Json(func(m *types.MediaType) {
+              m.Schema(func(s *types.Schema) {
+                s.Ref("#/components/schemas/Order")
+              })
+            })
+        }).
+        Response("400", func(r *types.Response) {
+          r.Description("Validation error")
+        }).
+        Response("401", func(r *types.Response) {
+          r.Description("Unauthorized")
+        })
+    })
+  })
 
   // Output
   encoder := json.NewEncoder(os.Stdout)
@@ -581,21 +582,51 @@ func main() {
 }
 ```
 
+## 🔌 Framework Adapters
+
+`oas` provides official adapters to integrate seamlessly with popular Go web frameworks.
+
+### Fiber Adapter
+
+The Fiber adapter automatically extracts path parameters and wraps your Fiber app, allowing you to document routes with a fluent API while maintaining your existing Fiber handlers.
+
+```go
+import adapter "github.com/leandroluk/gox/oas/adapter/fiber"
+
+// Wrap the Fiber App
+app := adapter.Wrap(fiber.New()).OAS(func(b *adapter.DocumentBuilder) {
+  b.Info(func(i *oas.Info) {
+    i.Title("My API")
+  })
+})
+
+// Use the fluent RouteBuilder for OAS documentation + Fiber handlers
+app.Get("/users/:id", func(r *adapter.RouteBuilder) {
+  r.Summary("Get user by ID").
+    Parameter(func(p *oas.Parameter) { p.In("path").Name("id") })
+  
+  // Register the fiber handlers on the next line
+  r.Handlers(getUserHandler)
+})
+```
+
+See the [complete Fiber example](./adapter/fiber/EXAMPLE.md) for a full demonstration including groups, automatic parameter extraction, and serving the Swagger JSON.
+
 ## API Reference
 
 ### Document
 
 ```go
 types.New().
-    OpenAPI(version).                              // Default: "3.0.3"
-    Info(func(i *Info) {}).   
-    Server(url, optionalBuild...).                 // Build callback is optional
-    Path(path, func(p *Path) {}).
-    Components(func(c *Components) {}).
-    Tag(name, optionalBuild...).                   // Build callback is optional
-    ExternalDocs(func(e *ExternalDocs) {}).
-    ExternalDoc(url, optionalBuild...).            // Shorthand with URL required
-    Security(name, scopes...)                      // Add global security requirement
+  OpenAPI(version).                              // Default: "3.0.3"
+  Info(func(i *Info) {}).   
+  Server(url, optionalBuild...).                 // Build callback is optional
+  Path(path, func(p *Path) {}).
+  Components(func(c *Components) {}).
+  Tag(name, optionalBuild...).                   // Build callback is optional
+  ExternalDocs(func(e *ExternalDocs) {}).
+  ExternalDoc(url, optionalBuild...).            // Shorthand with URL required
+  Security(name, scopes...)                      // Add global security requirement
 ```
 
 #### Optional Parameters Pattern
@@ -605,7 +636,7 @@ Many methods support optional build callbacks using variadic parameters:
 ```go
 // With callback for configuration
 doc.Tag("Products", func(t *Tag) {
-    t.Description("Product management")
+  t.Description("Product management")
 })
 
 // Without callback - just the required parameter
@@ -615,13 +646,13 @@ doc.Tag("Customers")
 // Server with optional configuration
 doc.Server("https://api.example.com")
 doc.Server("http://localhost:3000", func(s *Server) {
-    s.Description("Development")
+  s.Description("Development")
 })
 
 // ExternalDoc with optional description
 doc.ExternalDoc("https://docs.example.com")
 doc.ExternalDoc("https://docs.example.com", func(e *ExternalDocs) {
-    e.Description("Complete API documentation")
+  e.Description("Complete API documentation")
 })
 ```
 
@@ -636,17 +667,17 @@ doc.WithSecurityScheme(name, func(s *SecurityScheme) {})  // Custom security sch
 
 ```go
 operation.
-    Summary(text).
-    Description(text).
-    Tags(tags...).
-    OperationId(id).
-    Deprecated(bool).
-    Parameter(func(p *Parameter) {}).
-    RequestBody(func(rb *RequestBody) {}).
-    Response(code, func(r *Response) {}).
-    ExternalDocs(func(e *ExternalDocs) {}).
-    ExternalDoc(url, optionalBuild...).          // Shorthand with URL required
-    Server(url, optionalBuild...)                // Server override (optional callback)
+  Summary(text).
+  Description(text).
+  Tags(tags...).
+  OperationId(id).
+  Deprecated(bool).
+  Parameter(func(p *Parameter) {}).
+  RequestBody(func(rb *RequestBody) {}).
+  Response(code, func(r *Response) {}).
+  ExternalDocs(func(e *ExternalDocs) {}).
+  ExternalDoc(url, optionalBuild...).          // Shorthand with URL required
+  Server(url, optionalBuild...)                // Server override (optional callback)
 ```
 
 #### Security Helpers
@@ -676,37 +707,37 @@ schema.Integer().Nullable()  // type: ["integer", "null"]
 #### String Validation
 ```go
 schema.MinLength(n).
-       MaxLength(n).
-       Pattern(regex).
-       Format("email" | "uuid" | "uri" | "date" | "date-time" | ...)
+  MaxLength(n).
+  Pattern(regex).
+  Format("email" | "uuid" | "uri" | "date" | "date-time" | ...)
 ```
 
 #### Number Validation
 ```go
 schema.Minimum(n).
-       Maximum(n).
-       ExclusiveMinimum(bool).
-       ExclusiveMaximum(bool).
-       MultipleOf(n)
+  Maximum(n).
+  ExclusiveMinimum(bool).
+  ExclusiveMaximum(bool).
+  MultipleOf(n)
 ```
 
 #### Array Validation
 ```go
 schema.MinItems(n).
-       MaxItems(n).
-       UniqueItems(bool).
-       Items(func(s *Schema) {})
+  MaxItems(n).
+  UniqueItems(bool).
+  Items(func(s *Schema) {})
 ```
 
 #### Object Structure
 ```go
 schema.RequiredProperties(fields...).
-       Property(name, func(s *Schema) {}).
-       Required(name, func(s *Schema) {}).  // Define property and mark as required
-       Optional(name, func(s *Schema) {}).  // Alias for Property() for clarity
-       AdditionalProperties(value).
-       MinProperties(n).
-       MaxProperties(n)
+  Property(name, func(s *Schema) {}).
+  Required(name, func(s *Schema) {}).  // Define property and mark as required
+  Optional(name, func(s *Schema) {}).  // Alias for Property() for clarity
+  AdditionalProperties(value).
+  MinProperties(n).
+  MaxProperties(n)
 ```
 
 ##### Required & Optional
@@ -716,15 +747,15 @@ Use `Required` and `Optional` to avoid repeating field names:
 ```go
 // Traditional approach - field name repeated
 schema.Object().
-    Property("name", func(s *Schema) { s.String() }).
-    Property("email", func(s *Schema) { s.String() }).
-    RequiredProperties("name", "email")
+  Property("name", func(s *Schema) { s.String() }).
+  Property("email", func(s *Schema) { s.String() }).
+  RequiredProperties("name", "email")
 
 // New approach - no repetition
 schema.Object().
-    Required("name", func(s *Schema) { s.String() }).
-    Required("email", func(s *Schema) { s.String() }).
-    Optional("age", func(s *Schema) { s.Integer() })
+  Required("name", func(s *Schema) { s.String() }).
+  Required("email", func(s *Schema) { s.String() }).
+  Optional("age", func(s *Schema) { s.Integer() })
 ```
 
 
@@ -739,12 +770,12 @@ schema.Not(func(s *Schema) {})      // Must NOT match schema
 #### Metadata
 ```go
 schema.Title(text).
-       Description(text).
-       Example(value).
-       Default(value).
-       ReadOnly(bool).
-       WriteOnly(bool).
-       Deprecated(bool)
+  Description(text).
+  Example(value).
+  Default(value).
+  ReadOnly(bool).
+  WriteOnly(bool).
+  Deprecated(bool)
 ```
 
 ### Response & RequestBody
@@ -774,30 +805,30 @@ requestBody.Content(enums.ContentXml, func(m *MediaType) {})
 
 ```go
 parameter.Name(name).
-          In("query" | "header" | "path" | "cookie").
-          Required(bool).
-          Description(text).
-          Schema(func(s *Schema) {}).
-          Example(value).
-          Deprecated(bool).
-          AllowEmptyValue(bool).    // query/cookie only
-          AllowReserved(bool)       // query only
+  In("query" | "header" | "path" | "cookie").
+  Required(bool).
+  Description(text).
+  Schema(func(s *Schema) {}).
+  Example(value).
+  Deprecated(bool).
+  AllowEmptyValue(bool).    // query/cookie only
+  AllowReserved(bool)       // query only
 ```
 
 ### Components
 
 ```go
 components.
-    Schema(name, func(s *Schema) {}).
-    Response(name, func(r *Response) {}).
-    Parameter(name, func(p *Parameter) {}).
-    Example(name, func(e *ExampleObject) {}).
-    RequestBody(name, func(rb *RequestBody) {}).
-    Header(name, func(h *Header) {}).
-    SecurityScheme(name, func(ss *SecurityScheme) {}).
-    Link(name, func(l *Link) {}).
-    Callback(name, func(cb Callback) {}).
-    Path(name, func(p *Path) {})
+  Schema(name, func(s *Schema) {}).
+  Response(name, func(r *Response) {}).
+  Parameter(name, func(p *Parameter) {}).
+  Example(name, func(e *ExampleObject) {}).
+  RequestBody(name, func(rb *RequestBody) {}).
+  Header(name, func(h *Header) {}).
+  SecurityScheme(name, func(ss *SecurityScheme) {}).
+  Link(name, func(l *Link) {}).
+  Callback(name, func(cb Callback) {}).
+  Path(name, func(p *Path) {})
 ```
 
 ## Best Practices
@@ -807,12 +838,12 @@ Define common schemas in components and reference them:
 
 ```go
 doc.Components(func(c *Components) {
-    c.Schema("Error", func(s *Schema) {
-        s.Object().
-          Required("error", "message").
-          Property("error", func(p *Schema) { p.String() }).
-          Property("message", func(p *Schema) { p.String() })
-    })
+  c.Schema("Error", func(s *Schema) {
+    s.Object().
+      Required("error", "message").
+      Property("error", func(p *Schema) { p.String() }).
+      Property("message", func(p *Schema) { p.String() })
+  })
 })
 
 // Reference with $ref
@@ -845,8 +876,8 @@ operation.OperationId("create")        // ❌ Ambiguous
 // Validation happens automatically during marshaling
 data, err := json.Marshal(doc)
 if err != nil {
-    // Handle validation errors
-    log.Fatal(err)
+  // Handle validation errors
+  log.Fatal(err)
 }
 ```
 
@@ -854,7 +885,7 @@ if err != nil {
 ```go
 // Register schemes once at document level
 doc.WithBearerToken("bearer").
-    WithApiKey("api_key", "header")
+  WithApiKey("api_key", "header")
 
 // Apply to specific operations
 operation.UseBearerToken("bearer", "read", "write")

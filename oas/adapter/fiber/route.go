@@ -1,32 +1,47 @@
-// github.com/leandroluk/gox/oas/wrap/fiber/route.go
-package wrap
+// github.com/leandroluk/gox/oas/adapter/fiber/route.go
+package adapter
 
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/leandroluk/gox/oas"
 )
 
+// RouteBuilder joins OAS operation configuration and Fiber handlers.
+type RouteBuilder struct {
+	*oas.Operation
+	handlers []fiber.Handler
+}
+
+// Handlers registers the Fiber handlers for this route.
+func (r *RouteBuilder) Handlers(handlers ...fiber.Handler) *RouteBuilder {
+	r.handlers = handlers
+	return r
+}
+
 // addRoute registers the route in Fiber and documents the operation in OAS.
-// The fn parameter is optional: if nil, the route is documented only with
-// the group tags and automatically extracted path parameters.
-func (g *Group) addRoute(method, path string, handler fiber.Handler, fn func(*oas.Operation)) fiber.Router {
-	// Registers the route in Fiber (the Fiber Router accumulates prefixes)
-	g.Router.Add(method, path, handler)
+// It accepts either standard fiber.Handler functions or a single func(*RouteBuilder).
+func (g *Group) addRoute(method, path string, args ...any) fiber.Router {
+	var fiberHandlers []fiber.Handler
+	var routeBuilderFn func(*RouteBuilder)
 
-	// Builds the full OAS path: group prefix + route path,
-	// converting Fiber format (:param) to OpenAPI ({param})
-	fullOASPath := fiberPathToOAS(g.pathPrefix + path)
+	for _, arg := range args {
+		switch v := arg.(type) {
+		case func(*RouteBuilder):
+			routeBuilderFn = v
+		case fiber.Handler:
+			fiberHandlers = append(fiberHandlers, v)
+		}
+	}
 
-	// Initializes the operation and applies group tags
-	operation := oas.Operation{}
+	fullOASPath := FiberPathToOAS(g.pathPrefix + path)
+
+	operation := &oas.Operation{}
 	if len(g.tags) > 0 {
 		operation.Tags(g.tags...)
 	}
 
-	// Extracts path parameters automatically and adds them to the operation.
-	// The user can override or complement this via fn.
-	for _, paramName := range g.extractPathParams(path) {
-		name := paramName // capture for closure (avoids loop bug in Go < 1.22)
+	for _, paramName := range g.ExtractPathParams(path) {
+		name := paramName // capture for closure
 		operation.Parameter(func(p *oas.Parameter) {
 			p.In("path").
 				Name(name).
@@ -38,15 +53,22 @@ func (g *Group) addRoute(method, path string, handler fiber.Handler, fn func(*oa
 		})
 	}
 
-	// Allows additional operation configuration by the caller
-	if fn != nil {
-		fn(&operation)
+	if routeBuilderFn != nil {
+		builder := &RouteBuilder{
+			Operation: operation,
+			handlers:  fiberHandlers,
+		}
+		routeBuilderFn(builder)
+		fiberHandlers = builder.handlers
+	}
+
+	if len(fiberHandlers) > 0 {
+		g.Router.Add(method, path, fiberHandlers...)
 	}
 
 	// Registers the operation in the OAS document
-	capturedOp := operation // avoids loop variable pointer capture
 	g.document.Path(fullOASPath, func(p *oas.Path) {
-		opFn := func(o *oas.Operation) { *o = capturedOp }
+		opFn := func(o *oas.Operation) { *o = *operation }
 		switch method {
 		case "GET":
 			p.Get(opFn)
@@ -71,73 +93,41 @@ func (g *Group) addRoute(method, path string, handler fiber.Handler, fn func(*oa
 }
 
 // Get adds a GET route with optional OAS documentation.
-func (g *Group) Get(path string, handler fiber.Handler, fn ...func(*oas.Operation)) fiber.Router {
-	var opFn func(*oas.Operation)
-	if len(fn) > 0 {
-		opFn = fn[0]
-	}
-	return g.addRoute("GET", path, handler, opFn)
+func (g *Group) Get(path string, handlers ...any) fiber.Router {
+	return g.addRoute("GET", path, handlers...)
 }
 
 // Post adds a POST route with optional OAS documentation.
-func (g *Group) Post(path string, handler fiber.Handler, fn ...func(*oas.Operation)) fiber.Router {
-	var opFn func(*oas.Operation)
-	if len(fn) > 0 {
-		opFn = fn[0]
-	}
-	return g.addRoute("POST", path, handler, opFn)
+func (g *Group) Post(path string, handlers ...any) fiber.Router {
+	return g.addRoute("POST", path, handlers...)
 }
 
 // Put adds a PUT route with optional OAS documentation.
-func (g *Group) Put(path string, handler fiber.Handler, fn ...func(*oas.Operation)) fiber.Router {
-	var opFn func(*oas.Operation)
-	if len(fn) > 0 {
-		opFn = fn[0]
-	}
-	return g.addRoute("PUT", path, handler, opFn)
+func (g *Group) Put(path string, handlers ...any) fiber.Router {
+	return g.addRoute("PUT", path, handlers...)
 }
 
 // Delete adds a DELETE route with optional OAS documentation.
-func (g *Group) Delete(path string, handler fiber.Handler, fn ...func(*oas.Operation)) fiber.Router {
-	var opFn func(*oas.Operation)
-	if len(fn) > 0 {
-		opFn = fn[0]
-	}
-	return g.addRoute("DELETE", path, handler, opFn)
+func (g *Group) Delete(path string, handlers ...any) fiber.Router {
+	return g.addRoute("DELETE", path, handlers...)
 }
 
 // Options adds an OPTIONS route with optional OAS documentation.
-func (g *Group) Options(path string, handler fiber.Handler, fn ...func(*oas.Operation)) fiber.Router {
-	var opFn func(*oas.Operation)
-	if len(fn) > 0 {
-		opFn = fn[0]
-	}
-	return g.addRoute("OPTIONS", path, handler, opFn)
+func (g *Group) Options(path string, handlers ...any) fiber.Router {
+	return g.addRoute("OPTIONS", path, handlers...)
 }
 
 // Head adds a HEAD route with optional OAS documentation.
-func (g *Group) Head(path string, handler fiber.Handler, fn ...func(*oas.Operation)) fiber.Router {
-	var opFn func(*oas.Operation)
-	if len(fn) > 0 {
-		opFn = fn[0]
-	}
-	return g.addRoute("HEAD", path, handler, opFn)
+func (g *Group) Head(path string, handlers ...any) fiber.Router {
+	return g.addRoute("HEAD", path, handlers...)
 }
 
 // Patch adds a PATCH route with optional OAS documentation.
-func (g *Group) Patch(path string, handler fiber.Handler, fn ...func(*oas.Operation)) fiber.Router {
-	var opFn func(*oas.Operation)
-	if len(fn) > 0 {
-		opFn = fn[0]
-	}
-	return g.addRoute("PATCH", path, handler, opFn)
+func (g *Group) Patch(path string, handlers ...any) fiber.Router {
+	return g.addRoute("PATCH", path, handlers...)
 }
 
 // Trace adds a TRACE route with optional OAS documentation.
-func (g *Group) Trace(path string, handler fiber.Handler, fn ...func(*oas.Operation)) fiber.Router {
-	var opFn func(*oas.Operation)
-	if len(fn) > 0 {
-		opFn = fn[0]
-	}
-	return g.addRoute("TRACE", path, handler, opFn)
+func (g *Group) Trace(path string, handlers ...any) fiber.Router {
+	return g.addRoute("TRACE", path, handlers...)
 }

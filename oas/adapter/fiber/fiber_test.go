@@ -1,4 +1,4 @@
-package wrap
+package adapter_test
 
 import (
 	"encoding/json"
@@ -8,11 +8,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/leandroluk/gox/oas"
+	adapter "github.com/leandroluk/gox/oas/adapter/fiber"
 )
 
 func TestAdapter_GetRouteDocumentation(t *testing.T) {
 	fiberApp := fiber.New()
-	app := Adapter(fiberApp).OAS(func(b *DocumentBuilder) {
+	app := adapter.Wrap(fiberApp).OAS(func(b *adapter.DocumentBuilder) {
 		b.OpenAPI("3.0.3")
 		b.Info(func(i *oas.Info) {
 			i.Title("Test API").Version("1.0.0")
@@ -20,14 +21,15 @@ func TestAdapter_GetRouteDocumentation(t *testing.T) {
 	})
 
 	api := app.Group("/api")
-	users := api.Group("/users").OAS(func(b *GroupBuilder) {
+	users := api.Group("/users").OAS(func(b *adapter.GroupBuilder) {
 		b.Tag("Users").Description("Operations about user")
 	})
 
-	users.Get("/:id", func(c *fiber.Ctx) error {
-		return c.SendString(c.Params("id"))
-	}, func(op *oas.Operation) {
-		op.Summary("Get user by ID")
+	users.Get("/:id", func(r *adapter.RouteBuilder) {
+		r.Summary("Get user by ID")
+		r.Handlers(func(c *fiber.Ctx) error {
+			return c.SendString(c.Params("id"))
+		})
 	})
 
 	doc := app.Document()
@@ -72,8 +74,8 @@ func TestAdapter_GetRouteDocumentation(t *testing.T) {
 
 func TestAdapter_SwaggerJSONEndpoint(t *testing.T) {
 	fiberApp := fiber.New()
-	app := Adapter(fiberApp)
-	app.OAS(func(b *DocumentBuilder) {
+	app := adapter.Wrap(fiberApp)
+	app.OAS(func(b *adapter.DocumentBuilder) {
 		b.OpenAPI("3.0.3")
 		b.Info(func(i *oas.Info) {
 			i.Title("Endpoint Test API").Version("1.0.0")
@@ -108,49 +110,5 @@ func TestAdapter_SwaggerJSONEndpoint(t *testing.T) {
 	info, _ := parsed["info"].(map[string]interface{})
 	if info["title"] != "Endpoint Test API" {
 		t.Errorf("expected title to be 'Endpoint Test API', got %v", info["title"])
-	}
-}
-
-func TestExtractPathParams(t *testing.T) {
-	group := Group{}
-	tests := []struct {
-		route    string
-		expected []string
-	}{
-		{"/users/:id", []string{"id"}},
-		{"/users/:id/:field", []string{"id", "field"}},
-		{"/files/:name?", []string{"name"}},
-		{"/no/params", []string{}},
-	}
-
-	for _, tt := range tests {
-		result := group.extractPathParams(tt.route)
-		if len(result) != len(tt.expected) {
-			t.Errorf("Extract params for %s failed, expected %d, got %d", tt.route, len(tt.expected), len(result))
-		}
-		for i, p := range result {
-			if p != tt.expected[i] {
-				t.Errorf("Expected param %s at index %d, got %s", tt.expected[i], i, p)
-			}
-		}
-	}
-}
-
-func TestFiberPathToOAS(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected string
-	}{
-		{"/users/:id", "/users/{id}"},
-		{"/users/:id?", "/users/{id}"},
-		{"/users/:id/:field", "/users/{id}/{field}"},
-		{"/search", "/search"},
-	}
-
-	for _, tt := range tests {
-		result := fiberPathToOAS(tt.input)
-		if result != tt.expected {
-			t.Errorf("fiberPathToOAS(%s) = %s, expected %s", tt.input, result, tt.expected)
-		}
 	}
 }

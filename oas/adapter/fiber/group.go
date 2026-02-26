@@ -1,5 +1,5 @@
-// github.com/leandroluk/gox/oas/wrap/fiber/group.go
-package wrap
+// github.com/leandroluk/gox/oas/adapter/fiber/group.go
+package adapter
 
 import (
 	"github.com/gofiber/fiber/v2"

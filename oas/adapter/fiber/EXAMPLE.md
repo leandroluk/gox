@@ -28,22 +28,20 @@ func main() {
 		b.Tag("Users").Description("User management endpoints")
 	})
 
-	// Parameters :id and :field are extracted and documented automatically
+	// Normal handlers
 	users.Get("/:id", getUser)
 	users.Put("/:id", updateUser)
 	users.Get("/:id/:field", getUserField)
 
-	// Overrides automatic documentation for the :id parameter
-	users.Get("/:id/profile", getUserProfile, func(op *oas.Operation) {
-		op.Summary("Get user profile").
+	// Overrides automatic documentation for the :id parameter using RouteBuilder
+	users.Get("/:id/profile", func(r *adapter.RouteBuilder) {
+		r.Summary("Get user profile").
 			Parameter(func(p *oas.Parameter) {
 				p.In("path").
 					Name("id").
 					Description("User UUID").
 					Required(true).
-					Schema(func(s *oas.Schema) {
-						s.String().Format("uuid")
-					})
+					Schema(func(s *oas.Schema) { s.String().Format("uuid") })
 			}).
 			Response("200", func(r *oas.Response) {
 				r.Description("Profile data").
@@ -54,12 +52,13 @@ func main() {
 								Property("name", func(p *oas.Schema) { p.String() })
 						})
 					})
-			})
+			}).
+			Handlers(getUserProfile)
 	})
 
-	// Protected route with Bearer token
-	users.Post("", createUser, func(op *oas.Operation) {
-		op.Summary("Create user").
+	// Protected route with Bearer token using RouteBuilder
+	users.Post("", func(r *adapter.RouteBuilder) {
+		r.Summary("Create user").
 			UseBearerToken("bearer", "users:write").
 			RequestBody(func(rb *oas.RequestBody) {
 				rb.Required(true).
@@ -73,7 +72,8 @@ func main() {
 			}).
 			Response("201", func(r *oas.Response) {
 				r.Description("User created")
-			})
+			}).
+			Handlers(createUser)
 	})
 
 	// Serves the OAS document as JSON

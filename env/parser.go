@@ -2,6 +2,7 @@ package env
 
 import (
 	"bufio"
+	"io"
 	"os"
 	"strings"
 )
@@ -13,8 +14,11 @@ func loadEnvFile(filePath string) error {
 		return err
 	}
 	defer file.Close()
+	return parseReader(file)
+}
 
-	scanner := bufio.NewScanner(file)
+func parseReader(r io.Reader) error {
+	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		key, value, ok := parseEnvLine(scanner.Text())
 		if !ok {

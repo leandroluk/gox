@@ -66,6 +66,7 @@ func parseEnvLine(rawLine string) (string, string, bool) {
 	return key, value, true
 }
 
+// stripInlineComments removes inline comments from a string.
 func stripInlineComments(value string) string {
 	inQuotes := false
 	var quoteChar rune

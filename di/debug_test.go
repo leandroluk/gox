@@ -1,4 +1,4 @@
-package di
+package di_test
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/leandroluk/gox/di"
 )
 
 // Helper para capturar stdout
@@ -27,19 +29,19 @@ func captureOutput(f func()) string {
 
 func TestDebugMode_Enabled(t *testing.T) {
 	// Salva estado anterior
-	oldDebugMode := debugMode
-	defer func() { debugMode = oldDebugMode }()
+	oldDebugMode := di.DebugMode
+	defer func() { di.DebugMode = oldDebugMode }()
 
 	// Habilita debug mode
-	Debug()
+	di.Debug()
 
-	if !debugMode {
-		t.Error("Debug() did not set debugMode to true")
+	if !di.DebugMode {
+		t.Error("Debug() did not set di.DebugMode to true")
 	}
 
-	// Testa logDebug com debug ativado
+	// Testa di.LogDebug com debug ativado
 	output := captureOutput(func() {
-		logDebug("Test message: %s", "value")
+		di.LogDebug("Test message: %s", "value")
 	})
 
 	if !strings.Contains(output, "[DI] Test message: value") {
@@ -49,15 +51,15 @@ func TestDebugMode_Enabled(t *testing.T) {
 
 func TestDebugMode_Disabled(t *testing.T) {
 	// Salva estado anterior
-	oldDebugMode := debugMode
-	defer func() { debugMode = oldDebugMode }()
+	oldDebugMode := di.DebugMode
+	defer func() { di.DebugMode = oldDebugMode }()
 
 	// Garante que debug está desabilitado
-	debugMode = false
+	di.DebugMode = false
 
-	// Testa logDebug com debug desativado (não deve imprimir nada)
+	// Testa di.LogDebug com debug desativado (não deve imprimir nada)
 	output := captureOutput(func() {
-		logDebug("This should not appear")
+		di.LogDebug("This should not appear")
 	})
 
 	if output != "" {
@@ -67,10 +69,10 @@ func TestDebugMode_Disabled(t *testing.T) {
 
 func TestFail_WithDebug(t *testing.T) {
 	// Salva estado anterior
-	oldDebugMode := debugMode
-	defer func() { debugMode = oldDebugMode }()
+	oldDebugMode := di.DebugMode
+	defer func() { di.DebugMode = oldDebugMode }()
 
-	debugMode = true
+	di.DebugMode = true
 
 	// Captura panic e output
 	output := captureOutput(func() {
@@ -79,7 +81,7 @@ func TestFail_WithDebug(t *testing.T) {
 				t.Error("fail() should have panicked")
 			}
 		}()
-		fail("test error message")
+		di.Fail("test error message")
 	})
 
 	if !strings.Contains(output, "[DI] ERROR: test error message") {
@@ -89,10 +91,10 @@ func TestFail_WithDebug(t *testing.T) {
 
 func TestFail_WithoutDebug(t *testing.T) {
 	// Salva estado anterior
-	oldDebugMode := debugMode
-	defer func() { debugMode = oldDebugMode }()
+	oldDebugMode := di.DebugMode
+	defer func() { di.DebugMode = oldDebugMode }()
 
-	debugMode = false
+	di.DebugMode = false
 
 	// Captura panic sem output de debug
 	output := captureOutput(func() {
@@ -106,7 +108,7 @@ func TestFail_WithoutDebug(t *testing.T) {
 				}
 			}
 		}()
-		fail("test error message")
+		di.Fail("test error message")
 	})
 
 	// Não deve ter output quando debug está desabilitado
@@ -117,22 +119,22 @@ func TestFail_WithoutDebug(t *testing.T) {
 
 func TestDebugMode_Integration(t *testing.T) {
 	// Salva estado anterior
-	oldDebugMode := debugMode
-	defer func() { debugMode = oldDebugMode }()
+	oldDebugMode := di.DebugMode
+	defer func() { di.DebugMode = oldDebugMode }()
 
 	// Reseta registry
-	Reset()
+	di.Reset()
 
 	// Habilita debug
-	Debug()
+	di.Debug()
 
 	// Captura output durante registro e resolução
 	output := captureOutput(func() {
-		RegisterAs[string](func() string {
+		di.RegisterAs[string](func() string {
 			return "test value"
 		})
 
-		val := Resolve[string]()
+		val := di.Resolve[string]()
 		if val != "test value" {
 			t.Errorf("Expected 'test value', got '%s'", val)
 		}
@@ -154,13 +156,13 @@ func TestDebugMode_Integration(t *testing.T) {
 
 func TestLogDebug_MultipleArgs(t *testing.T) {
 	// Salva estado anterior
-	oldDebugMode := debugMode
-	defer func() { debugMode = oldDebugMode }()
+	oldDebugMode := di.DebugMode
+	defer func() { di.DebugMode = oldDebugMode }()
 
-	debugMode = true
+	di.DebugMode = true
 
 	output := captureOutput(func() {
-		logDebug("Values: %d, %s, %v", 42, "test", true)
+		di.LogDebug("Values: %d, %s, %v", 42, "test", true)
 	})
 
 	expected := "[DI] Values: 42, test, true"
@@ -171,13 +173,13 @@ func TestLogDebug_MultipleArgs(t *testing.T) {
 
 func TestLogDebug_NoArgs(t *testing.T) {
 	// Salva estado anterior
-	oldDebugMode := debugMode
-	defer func() { debugMode = oldDebugMode }()
+	oldDebugMode := di.DebugMode
+	defer func() { di.DebugMode = oldDebugMode }()
 
-	debugMode = true
+	di.DebugMode = true
 
 	output := captureOutput(func() {
-		logDebug("Simple message")
+		di.LogDebug("Simple message")
 	})
 
 	if !strings.Contains(output, "[DI] Simple message") {
@@ -187,15 +189,15 @@ func TestLogDebug_NoArgs(t *testing.T) {
 
 func TestDebug_MultipleCalls(t *testing.T) {
 	// Salva estado anterior
-	oldDebugMode := debugMode
-	defer func() { debugMode = oldDebugMode }()
+	oldDebugMode := di.DebugMode
+	defer func() { di.DebugMode = oldDebugMode }()
 
 	// Debug pode ser chamado múltiplas vezes
-	Debug()
-	Debug()
-	Debug()
+	di.Debug()
+	di.Debug()
+	di.Debug()
 
-	if !debugMode {
+	if !di.DebugMode {
 		t.Error("Debug mode should remain enabled")
 	}
 }
@@ -213,10 +215,10 @@ func TestFail_PanicRecovery(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Salva e restaura estado
-			oldDebugMode := debugMode
-			defer func() { debugMode = oldDebugMode }()
+			oldDebugMode := di.DebugMode
+			defer func() { di.DebugMode = oldDebugMode }()
 
-			debugMode = tc.debugMode
+			di.DebugMode = tc.debugMode
 
 			// Verifica que panic acontece
 			defer func() {
@@ -230,7 +232,7 @@ func TestFail_PanicRecovery(t *testing.T) {
 				}
 			}()
 
-			fail("panic message")
+			di.Fail("panic message")
 		})
 	}
 }

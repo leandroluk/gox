@@ -2,24 +2,24 @@ package di
 
 import "fmt"
 
-var debugMode = false
+var DebugMode = false
 
 // Debug enables debug mode, which prints registration and resolution events,
 // and prints errors before panicking.
 func Debug() {
-	debugMode = true
+	DebugMode = true
 }
 
-// logDebug prints a formatted message if debug mode is enabled.
-func logDebug(format string, args ...any) {
-	if debugMode {
+// LogDebug prints a formatted message if debug mode is enabled.
+func LogDebug(format string, args ...any) {
+	if DebugMode {
 		fmt.Printf("[DI] "+format+"\n", args...)
 	}
 }
 
-// fail prints the error message if debug mode is enabled, then panics.
-func fail(msg string) {
-	if debugMode {
+// Fail prints the error message if debug mode is enabled, then panics.
+func Fail(msg string) {
+	if DebugMode {
 		fmt.Printf("[DI] ERROR: %s\n", msg)
 	}
 	panic(msg)

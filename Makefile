@@ -35,12 +35,9 @@ help:
 test:
 	$(GO) test $(WORK_PACKAGES)
 
-# ---- coverage geral (arquivo de verdade) ----
-$(COVERPROFILE_ALL):
-	$(GO) test $(WORK_PACKAGES) -coverprofile=$@ -covermode=$(COVERMODE)
-
 .PHONY: cover
-cover: $(COVERPROFILE_ALL)
+cover:
+	$(GO) test $(WORK_PACKAGES) -coverprofile=$(COVERPROFILE_ALL) -covermode=$(COVERMODE)
 
 # ---- badge geral ----
 $(BADGE_DIR)/coverage.svg: $(COVERPROFILE_ALL)
@@ -51,11 +48,12 @@ badge: $(BADGE_DIR)/coverage.svg
 
 # ---- regras por módulo ----
 define module_rules
-$(1).coverage.out:
-	$(GO) test ./$(1)/... -coverprofile=$$@ -covermode=$(COVERMODE)
+.PHONY: $(1).cover
+$(1).cover:
+	$(GO) test ./$(1)/... -coverprofile=$(1).coverage.out -covermode=$(COVERMODE)
 
-$(BADGE_DIR)/$(1)-coverage.svg: $(1).coverage.out
-	$(GO) run $(BADGE_TOOL_PKG) -in $$< -out $$@ -label $(BADGE_LABEL)
+$(BADGE_DIR)/$(1)-coverage.svg: $(1).cover
+	$(GO) run $(BADGE_TOOL_PKG) -in $(1).coverage.out -out $@ -label $(BADGE_LABEL)
 endef
 
 $(foreach m,$(WORK_MODULES),$(eval $(call module_rules,$(m))))
@@ -72,7 +70,7 @@ ci: test badges
 .PHONY: clean
 clean:
 	$(GO) clean -testcache
-	rm -rf $(COVERPROFILE_ALL) $(BADGE_DIR)/*.svg
+	$(GO) run ./_tools/clean $(COVERPROFILE_ALL) "*.coverage.out" "$(BADGE_DIR)/*.svg"
 
 # ---- Release ----
 .PHONY: tag-create
@@ -101,7 +99,7 @@ tag-major:
 
 .PHONY: tag-purge
 tag-purge:
-	pwsh -Command "git tag | Where-Object { \$$_ -notmatch '$(filter-out $@,$(MAKECMDGOALS))\$$' } | ForEach-Object { git push origin --delete \$$_; git tag -d \$$_ }"
+	$(GO) run ./_tools/tag --purge "$(filter-out $@,$(MAKECMDGOALS))"
 
 %:
 	@:

@@ -12,4 +12,5 @@ use (
 	./validate
 	./_tools/badge
 	./_tools/tag
+	./_tools/clean
 )

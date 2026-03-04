@@ -15,8 +15,20 @@ func main() {
 	create := flag.Bool("create", false, "Create tags")
 	push := flag.Bool("push", false, "Push tags to remote")
 	delete := flag.Bool("delete", false, "Delete tags locally and remotely")
+	purge := flag.Bool("purge", false, "Delete all tags EXCEPT the ones for the specified version")
 	bump := flag.String("bump", "", "Bump version: 'minor' (2nd number) or 'patch' (3rd number)")
 	flag.Parse()
+
+	// If purge is specified
+	if *purge {
+		args := flag.Args()
+		if len(args) < 1 || args[0] == "" {
+			fmt.Println("Error: version to keep is required for --purge")
+			os.Exit(1)
+		}
+		purgeTags(args[0])
+		return
+	}
 
 	// If bump is specified, we need to infer the version from the latest git tag
 	var version string
@@ -238,6 +250,47 @@ func deleteTags(version string, modules []string) {
 	})
 
 	fmt.Println("Tag deletion completed (some tags may not have existed).")
+}
+
+func purgeTags(version string) {
+	fmt.Printf("Purging all tags except version %s...\n", version)
+
+	cmd := exec.Command("git", "tag")
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Printf("Error listing tags: %v\n", err)
+		return
+	}
+
+	tags := strings.Split(string(out), "\n")
+	suffix := version
+	if !strings.HasPrefix(suffix, "v") {
+		// If the user passed 0.1.0 instead of v0.1.0, we still want to match correctly if tags have 'v'.
+		// But usually we match exactly what's passed at the end of the tag.
+	}
+
+	// Double check if we should match exactly at the end or just contain.
+	// The pwsh was -notmatch 'v0.1.0$' -> which means "doesn't end with v0.1.0"
+
+	for _, tag := range tags {
+		tag = strings.TrimSpace(tag)
+		if tag == "" {
+			continue
+		}
+
+		if strings.HasSuffix(tag, version) {
+			fmt.Printf("Keeping tag: %s\n", tag)
+			continue
+		}
+
+		fmt.Printf("Purging tag: %s\n", tag)
+		// Delete locally
+		run("git", "tag", "-d", tag)
+		// Delete remotely
+		run("git", "push", "origin", ":refs/tags/"+tag)
+	}
+
+	fmt.Println("Purge completed.")
 }
 
 func runParallel(modules []string, maxConcurrency int, fn func(string)) {

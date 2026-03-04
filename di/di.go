@@ -1,6 +1,8 @@
 package di
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // Register adds a transient provider (a new instance is created every time it's resolved).
 func Register(factoryFN any) {
@@ -38,9 +40,9 @@ func Resolve[T any]() T {
 func ResolveAll[T any]() []T {
 	targetType := reflect.TypeFor[T]()
 
-	registryMutex.RLock()
-	providers := providerRegistry[targetType]
-	registryMutex.RUnlock()
+	RegistryMutex.RLock()
+	providers := ProviderRegistry[targetType]
+	RegistryMutex.RUnlock()
 
 	if len(providers) == 0 {
 		return nil

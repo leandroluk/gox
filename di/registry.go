@@ -41,7 +41,7 @@ func registerProvider(factoryFN any, isSingleton bool, asType reflect.Type) {
 		IsSingleton:     isSingleton,
 	}
 
-	registryMutex.Lock()
-	defer registryMutex.Unlock()
-	providerRegistry[outputType] = append(providerRegistry[outputType], providerInstance)
+	RegistryMutex.Lock()
+	defer RegistryMutex.Unlock()
+	ProviderRegistry[outputType] = append(ProviderRegistry[outputType], providerInstance)
 }

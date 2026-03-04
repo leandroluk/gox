@@ -1,8 +1,10 @@
-package di
+package di_test
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/leandroluk/gox/di"
 )
 
 // --- Mocks and Types for Testing ---
@@ -45,9 +47,9 @@ func NewCalculator(cfg *Config) *Calculator {
 // Since providerRegistry is private, we implement a Reset function
 // to ensure test isolation.
 func resetRegistry() {
-	registryMutex.Lock()
-	defer registryMutex.Unlock()
-	providerRegistry = make(map[reflect.Type][]*Provider)
+	di.RegistryMutex.Lock()
+	defer di.RegistryMutex.Unlock()
+	di.ProviderRegistry = make(map[reflect.Type][]*di.Provider)
 }
 
 // --- Test Cases ---
@@ -55,9 +57,9 @@ func resetRegistry() {
 func TestDI_RegisterAndResolve(t *testing.T) {
 	resetRegistry()
 
-	Register(NewConfig)
+	di.Register(NewConfig)
 
-	cfg := Resolve[*Config]()
+	cfg := di.Resolve[*Config]()
 	if cfg == nil {
 		t.Fatal("Expected *Config, got nil")
 	}
@@ -69,10 +71,10 @@ func TestDI_RegisterAndResolve(t *testing.T) {
 func TestDI_Singleton(t *testing.T) {
 	resetRegistry()
 
-	Singleton(NewConfig)
+	di.Singleton(NewConfig)
 
-	inst1 := Resolve[*Config]()
-	inst2 := Resolve[*Config]()
+	inst1 := di.Resolve[*Config]()
+	inst2 := di.Resolve[*Config]()
 
 	// Compara endereços de memória para garantir que é a mesma instância
 	if inst1 != inst2 {
@@ -83,10 +85,10 @@ func TestDI_Singleton(t *testing.T) {
 func TestDI_Transient(t *testing.T) {
 	resetRegistry()
 
-	Register(NewConfig)
+	di.Register(NewConfig)
 
-	inst1 := Resolve[*Config]()
-	inst2 := Resolve[*Config]()
+	inst1 := di.Resolve[*Config]()
+	inst2 := di.Resolve[*Config]()
 
 	// Devem ser instâncias diferentes (endereços diferentes)
 	if inst1 == inst2 {
@@ -98,9 +100,9 @@ func TestDI_RegisterAs(t *testing.T) {
 	resetRegistry()
 
 	// Registers *Circle bound to Shape interface
-	RegisterAs[Shape](NewCircle)
+	di.RegisterAs[Shape](NewCircle)
 
-	shape := Resolve[Shape]()
+	shape := di.Resolve[Shape]()
 	if shape == nil {
 		t.Fatal("Failed to resolve Shape interface")
 	}
@@ -115,10 +117,10 @@ func TestDI_NestedDependencies(t *testing.T) {
 	resetRegistry()
 
 	// Register dependencies
-	Singleton(NewConfig)
-	Register(NewCalculator) // NewCalculator depends on *Config
+	di.Singleton(NewConfig)
+	di.Register(NewCalculator) // NewCalculator depends on *Config
 
-	calc := Resolve[*Calculator]()
+	calc := di.Resolve[*Calculator]()
 
 	if calc.Config == nil {
 		t.Fatal("Dependency *Config was not automatically injected into Calculator")
@@ -133,10 +135,10 @@ func TestDI_ResolveAll(t *testing.T) {
 	resetRegistry()
 
 	// Register multiple shapes
-	RegisterAs[Shape](func() *Circle { return &Circle{Radius: 1} })
-	RegisterAs[Shape](func() *Circle { return &Circle{Radius: 2} })
+	di.RegisterAs[Shape](func() *Circle { return &Circle{Radius: 1} })
+	di.RegisterAs[Shape](func() *Circle { return &Circle{Radius: 2} })
 
-	shapes := ResolveAll[Shape]()
+	shapes := di.ResolveAll[Shape]()
 
 	if len(shapes) != 2 {
 		t.Errorf("Expected 2 registered shapes, got %d", len(shapes))
@@ -151,7 +153,7 @@ func TestDI_Panics(t *testing.T) {
 				t.Error("Should have panicked when registering a string instead of a function")
 			}
 		}()
-		Register("not a function")
+		di.Register("not a function")
 	})
 
 	t.Run("Panic on multi-return factory", func(t *testing.T) {
@@ -162,6 +164,6 @@ func TestDI_Panics(t *testing.T) {
 			}
 		}()
 		multiReturnFactory := func() (*Config, error) { return &Config{}, nil }
-		Register(multiReturnFactory)
+		di.Register(multiReturnFactory)
 	})
 }

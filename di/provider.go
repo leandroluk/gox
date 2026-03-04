@@ -22,7 +22,7 @@ type Provider struct {
 // Reset clears all registered providers.
 // Primarily used for unit tests to ensure isolation.
 func Reset() {
-	registryMutex.Lock()
-	defer registryMutex.Unlock()
-	providerRegistry = make(map[reflect.Type][]*Provider)
+	RegistryMutex.Lock()
+	defer RegistryMutex.Unlock()
+	ProviderRegistry = make(map[reflect.Type][]*Provider)
 }

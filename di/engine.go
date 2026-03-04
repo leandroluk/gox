@@ -3,20 +3,21 @@ package di
 import (
 	"fmt"
 	"reflect"
+	"sync"
 )
 
 // resolveByType finds the registered provider and triggers the build process.
 func resolveByType(targetType reflect.Type) reflect.Value {
 	logDebug("Resolving %v", targetType)
 
-	registryMutex.RLock()
-	providers := providerRegistry[targetType]
-	registryMutex.RUnlock()
+	RegistryMutex.RLock()
+	providers := ProviderRegistry[targetType]
+	RegistryMutex.RUnlock()
 
 	if len(providers) == 0 {
-		registryMutex.RLock()
+		RegistryMutex.RLock()
 		handlers := make([]func(reflect.Type) (any, bool), 0)
-		registryMutex.RUnlock()
+		RegistryMutex.RUnlock()
 
 		for _, handler := range handlers {
 			if instance, ok := handler(targetType); ok {
@@ -57,3 +58,8 @@ func callFactoryWithDependencies(providerInstance *Provider) reflect.Value {
 	outputValues := providerInstance.FactoryFunction.Call(arguments)
 	return outputValues[0]
 }
+
+var (
+	RegistryMutex    sync.RWMutex
+	ProviderRegistry = map[reflect.Type][]*Provider{}
+)

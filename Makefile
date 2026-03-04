@@ -65,7 +65,7 @@ module-badges: $(foreach m,$(WORK_MODULES),$(BADGE_DIR)/$(m)-coverage.svg)
 badges: badge module-badges
 
 .PHONY: ci
-ci: test badges
+ci: cover badges
 
 .PHONY: clean
 clean:

@@ -24,7 +24,7 @@ jobs:
             **/go.sum
 
       - name: Run tests + generate badges
-        run: make badges
+        run: make ci
 
       - name: Remove coverage profiles
         run: rm -f coverage.out *.coverage.out

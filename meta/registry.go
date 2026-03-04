@@ -3,6 +3,7 @@ package meta
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -85,8 +86,8 @@ func Describe(target any, options ...ObjectOption) {
 	}
 }
 
-// resolveFieldName compares pointers and types to find the string name of a struct field.
-func resolveFieldName(structPointer any, fieldPointer any) string {
+// ResolveFieldName compares pointers and types to find the string name of a struct field.
+func ResolveFieldName(structPointer any, fieldPointer any) (name string, jsonTag string, fieldType reflect.Type) {
 	structValue := reflect.ValueOf(structPointer)
 	if structValue.Kind() == reflect.Pointer {
 		structValue = structValue.Elem()
@@ -94,52 +95,59 @@ func resolveFieldName(structPointer any, fieldPointer any) string {
 
 	fVal := reflect.ValueOf(fieldPointer)
 	if fVal.Kind() != reflect.Pointer {
-		return ""
+		return "", "", nil
 	}
 	targetAddr := fVal.Pointer()
-
-	// We get the specific element type being pointed to (e.g., string, int, Struct)
-	// This allows us to distinguish between &MyStruct and &MyStruct.FirstField
-	// which share the same memory address but have different types.
 	targetType := fVal.Type().Elem()
 
-	return resolveFieldNameRecursive(structValue, targetAddr, targetType)
+	return resolveFieldNameRecursive(structValue, structValue.Type(), targetAddr, targetType, "")
 }
 
-func resolveFieldNameRecursive(v reflect.Value, targetAddr uintptr, targetType reflect.Type) string {
+func resolveFieldNameRecursive(
+	v reflect.Value,
+	t reflect.Type,
+	targetAddr uintptr,
+	targetType reflect.Type,
+	jsonPrefix string,
+) (name string, jsonTag string, fieldType reflect.Type) {
 	if v.Kind() != reflect.Struct {
-		return ""
+		return "", "", nil
 	}
-	t := v.Type()
 
 	for i := 0; i < v.NumField(); i++ {
 		fVal := v.Field(i)
 		fType := t.Field(i)
 
-		// 1. Check if the address matches
+		rawJSON := fType.Tag.Get("json")
+		jsonName := strings.Split(rawJSON, ",")[0]
+		if jsonName == "" || jsonName == "-" {
+			jsonName = fType.Name
+		}
+		fullJSON := jsonName
+		if jsonPrefix != "" {
+			fullJSON = jsonPrefix + "." + jsonName
+		}
+
 		if fVal.CanAddr() && fVal.Addr().Pointer() == targetAddr {
-			// 2. Strict Type Check:
-			// If the address is the same, we must also check if the type is the same.
-			// This handles the edge case where a Struct and its first Field share the same address.
 			if fVal.Type() == targetType {
-				return fType.Name
+				return fType.Name, fullJSON, fVal.Type()
 			}
 		}
 
-		// 3. Recursion
 		checkVal := fVal
 		if checkVal.Kind() == reflect.Pointer && !checkVal.IsNil() {
 			checkVal = checkVal.Elem()
 		}
 
 		if checkVal.Kind() == reflect.Struct {
-			if sub := resolveFieldNameRecursive(checkVal, targetAddr, targetType); sub != "" {
+			subName, subJSON, subType := resolveFieldNameRecursive(checkVal, checkVal.Type(), targetAddr, targetType, fullJSON)
+			if subName != "" {
 				if fType.Anonymous {
-					return sub
+					return subName, subJSON, subType
 				}
-				return fType.Name + "." + sub
+				return fType.Name + "." + subName, subJSON, subType
 			}
 		}
 	}
-	return ""
+	return "", "", nil
 }

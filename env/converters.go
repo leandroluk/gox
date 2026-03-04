@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// convertStringToType converts a string to the specified type.
 func convertStringToType[T any](raw string) (T, error) {
 	var zero T
 	targetType := reflect.TypeFor[T]()
@@ -45,6 +46,7 @@ func convertStringToType[T any](raw string) (T, error) {
 	return zero, fmt.Errorf("env: unsupported type %v", targetType)
 }
 
+// parseTime parses a time string.
 func parseTime(raw string) (time.Time, error) {
 	layouts := []string{time.RFC3339, "2006-01-02 15:04:05", "2006-01-02"}
 	for _, l := range layouts {

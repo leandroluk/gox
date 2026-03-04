@@ -5,11 +5,6 @@ import (
 	"sync"
 )
 
-var (
-	registryMutex    sync.RWMutex
-	providerRegistry = map[reflect.Type][]*Provider{}
-)
-
 // Provider holds the necessary information to create and manage an instance.
 type Provider struct {
 	FactoryFunction reflect.Value // The function used to create the instance.

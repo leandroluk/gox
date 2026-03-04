@@ -1,3 +1,9 @@
+# debug demo
+
+This example demonstrates how to use the debug mode in the `di` package to trace registration and resolution processes.
+
+
+```go
 package main
 
 import (
@@ -33,3 +39,4 @@ func main() {
 	// This should print the error before panicking
 	di.Resolve[string]()
 }
+```

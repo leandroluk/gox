@@ -53,7 +53,7 @@ $(1).cover:
 	$(GO) test ./$(1)/... -coverprofile=$(1).coverage.out -covermode=$(COVERMODE)
 
 $(BADGE_DIR)/$(1)-coverage.svg: $(1).cover
-	$(GO) run $(BADGE_TOOL_PKG) -in $(1).coverage.out -out $@ -label $(BADGE_LABEL)
+	$(GO) run $(BADGE_TOOL_PKG) -in $(1).coverage.out -out $$@ -label $(BADGE_LABEL)
 endef
 
 $(foreach m,$(WORK_MODULES),$(eval $(call module_rules,$(m))))

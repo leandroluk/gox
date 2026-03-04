@@ -28,10 +28,10 @@ func main() {
 		b.Tag("Users").Description("User management endpoints")
 	})
 
-	// Normal handlers
-	users.Get("/:id", getUser)
-	users.Put("/:id", updateUser)
-	users.Get("/:id/:field", getUserField)
+	// Normal handlers wrapped in RouteBuilder to satisfy the new API
+	users.Get("/:id", func(r *adapter.RouteBuilder) { r.Handlers(getUser) })
+	users.Put("/:id", func(r *adapter.RouteBuilder) { r.Handlers(updateUser) })
+	users.Get("/:id/:field", func(r *adapter.RouteBuilder) { r.Handlers(getUserField) })
 
 	// Overrides automatic documentation for the :id parameter using RouteBuilder
 	users.Get("/:id/profile", func(r *adapter.RouteBuilder) {
@@ -43,8 +43,8 @@ func main() {
 					Required(true).
 					Schema(func(s *oas.Schema) { s.String().Format("uuid") })
 			}).
-			Response("200", func(r *oas.Response) {
-				r.Description("Profile data").
+			Response("200", func(res *oas.Response) {
+				res.Description("Profile data").
 					Json(func(m *oas.MediaType) {
 						m.Schema(func(s *oas.Schema) {
 							s.Object().
@@ -52,8 +52,8 @@ func main() {
 								Property("name", func(p *oas.Schema) { p.String() })
 						})
 					})
-			}).
-			Handlers(getUserProfile)
+			})
+		r.Handlers(getUserProfile)
 	})
 
 	// Protected route with Bearer token using RouteBuilder
@@ -70,10 +70,10 @@ func main() {
 						})
 					})
 			}).
-			Response("201", func(r *oas.Response) {
-				r.Description("User created")
-			}).
-			Handlers(createUser)
+			Response("201", func(res *oas.Response) {
+				res.Description("User created")
+			})
+		r.Handlers(createUser)
 	})
 
 	// Serves the OAS document as JSON

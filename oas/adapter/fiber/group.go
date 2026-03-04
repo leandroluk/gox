@@ -1,19 +1,11 @@
-// github.com/leandroluk/gox/oas/adapter/fiber/group.go
 package adapter
 
 import (
+	"regexp"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/leandroluk/gox/oas"
 )
-
-// Group represents a route group with OpenAPI context
-type Group struct {
-	fiber.Router
-	document    *oas.Document
-	tags        []string
-	pathPrefix  string
-	description string
-}
 
 // GroupBuilder constructor for group configuration
 type GroupBuilder struct {
@@ -31,6 +23,15 @@ func (b *GroupBuilder) Tag(tag string) *GroupBuilder {
 func (b *GroupBuilder) Description(desc string) *GroupBuilder {
 	b.group.description = desc
 	return b
+}
+
+// Group represents a route group with OpenAPI context
+type Group struct {
+	fiber.Router
+	document    *oas.Document
+	tags        []string
+	pathPrefix  string
+	description string
 }
 
 // OAS configures the group with tags and description.
@@ -61,4 +62,25 @@ func (g *Group) Group(prefix string, handlers ...fiber.Handler) *Group {
 		tags:       append([]string{}, g.tags...), // inherit a copy of the parent tags
 		pathPrefix: g.pathPrefix + prefix,
 	}
+}
+
+// ExtractPathParams extracts path parameter names in Fiber format.
+// Supports normal parameters (:param) and optional ones (:param?).
+//
+// Examples:
+//
+//	/users/:id           → ["id"]
+//	/users/:id/:field    → ["id", "field"]
+//	/files/:name?        → ["name"]
+func (g *Group) ExtractPathParams(routePath string) []string {
+	re := regexp.MustCompile(`:([a-zA-Z0-9_]+)\??`)
+	matches := re.FindAllStringSubmatch(routePath, -1)
+
+	params := make([]string, 0, len(matches))
+	for _, match := range matches {
+		if len(match) > 1 {
+			params = append(params, match[1])
+		}
+	}
+	return params
 }

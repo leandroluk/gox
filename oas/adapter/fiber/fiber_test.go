@@ -13,7 +13,7 @@ import (
 
 func TestAdapter_GetRouteDocumentation(t *testing.T) {
 	fiberApp := fiber.New()
-	app := adapter.Wrap(fiberApp).OAS(func(b *adapter.DocumentBuilder) {
+	app := adapter.NewFiber(fiberApp).OAS(func(b *adapter.DocumentBuilder) {
 		b.OpenAPI("3.0.3")
 		b.Info(func(i *oas.Info) {
 			i.Title("Test API").Version("1.0.0")
@@ -72,9 +72,9 @@ func TestAdapter_GetRouteDocumentation(t *testing.T) {
 	}
 }
 
-func TestAdapter_SwaggerJSONEndpoint(t *testing.T) {
+func TestAdapter_JSONEndpoint(t *testing.T) {
 	fiberApp := fiber.New()
-	app := adapter.Wrap(fiberApp)
+	app := adapter.NewFiber(fiberApp)
 	app.OAS(func(b *adapter.DocumentBuilder) {
 		b.OpenAPI("3.0.3")
 		b.Info(func(i *oas.Info) {

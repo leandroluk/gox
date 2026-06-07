@@ -12,7 +12,8 @@ import (
 )
 
 type Schema struct {
-	required bool
+	required  bool
+	isDefault bool
 
 	dateTimeOnly bool
 
@@ -35,6 +36,11 @@ func New() *Schema {
 
 func (s *Schema) Required() *Schema {
 	s.required = true
+	return s
+}
+
+func (s *Schema) IsDefault() *Schema {
+	s.isDefault = true
 	return s
 }
 

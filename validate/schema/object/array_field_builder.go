@@ -14,17 +14,18 @@ type ArrayFieldBuilder[T any] struct {
 	schema    *Schema[T]
 	fieldInfo fieldInfo[T]
 
-	required bool
-	min      *int
-	max      *int
-	len      *int
-	eq       *int
-	ne       *int
-	gt       *int
-	gte      *int
-	lt       *int
-	lte      *int
-	unique   bool
+	required  bool
+	isDefault bool
+	min       *int
+	max       *int
+	len       *int
+	eq        *int
+	ne        *int
+	gt        *int
+	gte       *int
+	lt        *int
+	lte       *int
+	unique    bool
 
 	itemSchema schema.AnySchema
 
@@ -33,6 +34,11 @@ type ArrayFieldBuilder[T any] struct {
 
 func (b *ArrayFieldBuilder[T]) Required() *ArrayFieldBuilder[T] {
 	b.required = true
+	return b.build()
+}
+
+func (b *ArrayFieldBuilder[T]) IsDefault() *ArrayFieldBuilder[T] {
+	b.isDefault = true
 	return b.build()
 }
 
@@ -202,6 +208,120 @@ func (b *ArrayFieldBuilder[T]) build() *ArrayFieldBuilder[T] {
 		b.schema.lastFieldIndex = b.fieldIndex
 	}
 
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) RequiredIf(path string, op ConditionOp, expected any) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.RequiredIf(path, op, expected)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) RequiredWith(paths ...string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.RequiredWith(paths...)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) RequiredWithout(paths ...string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.RequiredWithout(paths...)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) ExcludedIf(path string, op ConditionOp, expected any) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.ExcludedIf(path, op, expected)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) SkipUnless(path string, op ConditionOp, expected any) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.SkipUnless(path, op, expected)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) EqField(other string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.EqField(other)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) NeField(other string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.NeField(other)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) GtField(other string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.GtField(other)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) GteField(other string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.GteField(other)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) LtField(other string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.LtField(other)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) LteField(other string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.LteField(other)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) EqCSField(path string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.EqCSField(path)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) NeCSField(path string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.NeCSField(path)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) GtCSField(path string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.GtCSField(path)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) GteCSField(path string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.GteCSField(path)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) LtCSField(path string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.LtCSField(path)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) LteCSField(path string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.LteCSField(path)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) FieldContains(other string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.FieldContains(other)
+	return b
+}
+
+func (b *ArrayFieldBuilder[T]) FieldExcludes(other string) *ArrayFieldBuilder[T] {
+	b.build()
+	b.schema.FieldExcludes(other)
 	return b
 }
 

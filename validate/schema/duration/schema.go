@@ -12,7 +12,8 @@ import (
 )
 
 type Schema struct {
-	required bool
+	required  bool
+	isDefault bool
 
 	compareRules *ruleset.Set[time.Duration]
 	boundRules   *ruleset.Set[time.Duration]
@@ -42,6 +43,11 @@ func (s *Schema) putBound(ruleValue ruleset.Rule[time.Duration]) *Schema {
 
 func (s *Schema) Required() *Schema {
 	s.required = true
+	return s
+}
+
+func (s *Schema) IsDefault() *Schema {
+	s.isDefault = true
 	return s
 }
 

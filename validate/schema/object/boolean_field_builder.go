@@ -176,6 +176,18 @@ func (b *BooleanFieldBuilder[T]) LteCSField(path string) *BooleanFieldBuilder[T]
 	return b
 }
 
+func (b *BooleanFieldBuilder[T]) FieldContains(other string) *BooleanFieldBuilder[T] {
+	b.build()
+	b.schema.FieldContains(other)
+	return b
+}
+
+func (b *BooleanFieldBuilder[T]) FieldExcludes(other string) *BooleanFieldBuilder[T] {
+	b.build()
+	b.schema.FieldExcludes(other)
+	return b
+}
+
 func (b *BooleanFieldBuilder[T]) ValidateAny(value any, options schema.Options) (any, error) {
 	return b.booleanSchema.ValidateAny(value, options)
 }

@@ -58,6 +58,12 @@ func (b *DateFieldBuilder[T]) Required() *DateFieldBuilder[T] {
 	return b
 }
 
+func (b *DateFieldBuilder[T]) IsDefault() *DateFieldBuilder[T] {
+	b.dateSchema.IsDefault()
+	b.build()
+	return b
+}
+
 func (b *DateFieldBuilder[T]) Default(value time.Time) *DateFieldBuilder[T] {
 	b.dateSchema.Default(value)
 	b.build()
@@ -181,6 +187,18 @@ func (b *DateFieldBuilder[T]) LtCSField(path string) *DateFieldBuilder[T] {
 func (b *DateFieldBuilder[T]) LteCSField(path string) *DateFieldBuilder[T] {
 	b.build()
 	b.schema.LteCSField(path)
+	return b
+}
+
+func (b *DateFieldBuilder[T]) FieldContains(other string) *DateFieldBuilder[T] {
+	b.build()
+	b.schema.FieldContains(other)
+	return b
+}
+
+func (b *DateFieldBuilder[T]) FieldExcludes(other string) *DateFieldBuilder[T] {
+	b.build()
+	b.schema.FieldExcludes(other)
 	return b
 }
 

@@ -58,6 +58,12 @@ func (b *TextFieldBuilder[T]) Required() *TextFieldBuilder[T] {
 	return b
 }
 
+func (b *TextFieldBuilder[T]) IsDefault() *TextFieldBuilder[T] {
+	b.textSchema.IsDefault()
+	b.build()
+	return b
+}
+
 func (b *TextFieldBuilder[T]) Default(value string) *TextFieldBuilder[T] {
 	b.textSchema.Default(value)
 	b.build()

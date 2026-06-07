@@ -1,8 +1,8 @@
-# Package v
+# Package validate
 
 **Type-safe** data validation in Go, Zod/Joi style (code-based schemas), with defaults, **opt-in** coercion, errors with **paths**, and support for validating **structs** and **JSON** (`[]byte` / `json.RawMessage`).
 
-## Why v?
+## Why validate?
 
 ### 1. AST-Based Validation (Missing vs Null)
 Most Go validators conflate `zero values` (0, "") with `missing values`. `validate` builds an Abstract Syntax Tree (AST) of your input first.
@@ -26,8 +26,8 @@ go get github.com/leandroluk/gox/v
 ```
 
 ## Summary
-- [Package v](#package-v)
-  - [Why v?](#why-v)
+- [Package validate](#package-validate)
+  - [Why validate?](#why-validate)
     - [1. AST-Based Validation (Missing vs Null)](#1-ast-based-validation-missing-vs-null)
     - [2. DDD Friendly (Schema Decoupled from Structs)](#2-ddd-friendly-schema-decoupled-from-structs)
     - [3. Type Safety (Generics + Reflection)](#3-type-safety-generics--reflection)

@@ -58,6 +58,12 @@ func (b *DurationFieldBuilder[T]) Required() *DurationFieldBuilder[T] {
 	return b
 }
 
+func (b *DurationFieldBuilder[T]) IsDefault() *DurationFieldBuilder[T] {
+	b.durationSchema.IsDefault()
+	b.build()
+	return b
+}
+
 func (b *DurationFieldBuilder[T]) Default(value time.Duration) *DurationFieldBuilder[T] {
 	b.durationSchema.Default(value)
 	b.build()
@@ -181,6 +187,18 @@ func (b *DurationFieldBuilder[T]) LtCSField(path string) *DurationFieldBuilder[T
 func (b *DurationFieldBuilder[T]) LteCSField(path string) *DurationFieldBuilder[T] {
 	b.build()
 	b.schema.LteCSField(path)
+	return b
+}
+
+func (b *DurationFieldBuilder[T]) FieldContains(other string) *DurationFieldBuilder[T] {
+	b.build()
+	b.schema.FieldContains(other)
+	return b
+}
+
+func (b *DurationFieldBuilder[T]) FieldExcludes(other string) *DurationFieldBuilder[T] {
+	b.build()
+	b.schema.FieldExcludes(other)
 	return b
 }
 

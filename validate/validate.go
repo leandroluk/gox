@@ -173,73 +173,53 @@ func ResetRegistry() {
 // Object creates a new ObjectSchema for type T.
 // The builder function is used to define fields and semantic rules on the schema.
 func Object[T any](builder func(target *T, schemaValue *object.Schema[T])) *object.Schema[T] {
-	schemaValue := object.New(builder)
-	registry.Register(schemaValue)
-	return schemaValue
+	return object.New(builder)
 }
 
 // Array creates a new ArraySchema for elements of type E.
 func Array[E any]() *array.Schema[E] {
-	schemaValue := array.New[E]()
-	registry.Register(schemaValue)
-	return schemaValue
+	return array.New[E]()
 }
 
 // Record creates a new RecordSchema for maps with values of type V.
 func Record[V any]() *record.Schema[V] {
-	schemaValue := record.New[V]()
-	registry.Register(schemaValue)
-	return schemaValue
+	return record.New[V]()
 }
 
 // Text creates a new TextSchema for string validation.
 func Text() *text.Schema {
-	schemaValue := text.New()
-	registry.Register(schemaValue)
-	return schemaValue
+	return text.New()
 }
 
 // Boolean creates a new BooleanSchema.
 func Boolean() *boolean.Schema {
-	schemaValue := boolean.New()
-	registry.Register(schemaValue)
-	return schemaValue
+	return boolean.New()
 }
 
 // Date creates a new DateSchema for time.Time validation.
 func Date() *date.Schema {
-	schemaValue := date.New()
-	registry.Register(schemaValue)
-	return schemaValue
+	return date.New()
 }
 
 // Duration creates a new DurationSchema for time.Duration validation.
 func Duration() *duration.Schema {
-	schemaValue := duration.New()
-	registry.Register(schemaValue)
-	return schemaValue
+	return duration.New()
 }
 
 // Number creates a new NumberSchema[N] for numeric validation.
 // N can be any integer or float type.
 func Number[N types.Number]() *number.Schema[N] {
-	schemaValue := number.New[N]()
-	registry.Register(schemaValue)
-	return schemaValue
+	return number.New[N]()
 }
 
 // AnyOf creates a combinator schema that succeeds if at least one of the provided schemas succeeds.
 func AnyOf[T any](schemaList ...combinator.Schema[T]) *combinator.AnyOfSchema[T] {
-	schemaValue := combinator.AnyOf(schemaList...)
-	registry.Register(schemaValue)
-	return schemaValue
+	return combinator.AnyOf(schemaList...)
 }
 
 // OneOf creates a combinator schema that succeeds if exactly one of the provided schemas succeeds.
 func OneOf[T any](schemaList ...combinator.Schema[T]) *combinator.OneOfSchema[T] {
-	schemaValue := combinator.OneOf(schemaList...)
-	registry.Register(schemaValue)
-	return schemaValue
+	return combinator.OneOf(schemaList...)
 }
 
 // Validate validates the input against the registered schema for type T.

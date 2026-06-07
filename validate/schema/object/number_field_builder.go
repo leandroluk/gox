@@ -254,6 +254,18 @@ func (b *NumberFieldBuilder[T]) LteCSField(path string) *NumberFieldBuilder[T] {
 	return b
 }
 
+func (b *NumberFieldBuilder[T]) FieldContains(other string) *NumberFieldBuilder[T] {
+	b.build()
+	b.schema.FieldContains(other)
+	return b
+}
+
+func (b *NumberFieldBuilder[T]) FieldExcludes(other string) *NumberFieldBuilder[T] {
+	b.build()
+	b.schema.FieldExcludes(other)
+	return b
+}
+
 func (b *NumberFieldBuilder[T]) ValidateAny(value any, options schema.Options) (any, error) {
 	return nil, nil
 }

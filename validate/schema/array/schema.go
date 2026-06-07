@@ -15,7 +15,8 @@ import (
 type ItemValidator[E any] func(context *engine.Context, value ast.Value) (E, bool)
 
 type Schema[E any] struct {
-	required bool
+	required  bool
+	isDefault bool
 
 	lengthRules *ruleset.Set[int]
 
@@ -44,6 +45,11 @@ func (s *Schema[E]) putLength(ruleValue ruleset.Rule[int]) *Schema[E] {
 
 func (s *Schema[E]) Required() *Schema[E] {
 	s.required = true
+	return s
+}
+
+func (s *Schema[E]) IsDefault() *Schema[E] {
+	s.isDefault = true
 	return s
 }
 

@@ -28,6 +28,22 @@ This repository uses **Go Workspaces** (`go.work`) and supports **Go 1.25+**.
 make test
 ```
 
+### Managing Releases and Tags
+
+You can manage tags and releases across all modules using the following `make` commands:
+
+- `make tag-patch`: Bumps the patch version (e.g., `v0.9.0` -> `v0.9.1`).
+- `make tag-minor`: Bumps the minor version (e.g., `v0.9.0` -> `v0.10.0`).
+- `make tag-major`: Bumps the major version (e.g., `v0.9.0` -> `v1.0.0`).
+
+> [!NOTE]
+> All bump commands (`tag-patch`, `tag-minor`, `tag-major`) will automatically **create and push** new tags, and **delete** the old tags and GitHub releases both locally and remotely.
+
+Other available commands:
+- `make tag <version>`: Creates and pushes tags for a specific version.
+- `make tag-delete <version>`: Deletes tags and releases locally and remotely.
+- `make tag-purge <version>`: Deletes all previous tags except the specified version.
+
 ## Modules
 
 | Module                     | Purpose                                                                      |                         Coverage                         |

@@ -3,6 +3,7 @@ go 1.25
 use (
 	./cqrs
 	./di
+	./di_v1
 	./env
 	./meta
 	./mut

@@ -10,8 +10,6 @@ import (
 	"github.com/leandroluk/gox/di"
 )
 
-// --- Lifecycle Test Types ---
-
 type LifecycleDatabase struct {
 	Connected bool
 	Closed    bool
@@ -66,41 +64,35 @@ func (s *LifecycleServer) Stop() error {
 	return nil
 }
 
-// --- Basic Lifecycle Tests ---
-
 func TestDI_Lifecycle_BasicStartStop(t *testing.T) {
 	di.Reset()
 
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "test"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
-			return instance.(*LifecycleDatabase).Connect()
-		},
-		OnStop: func(instance any) error {
-			return instance.(*LifecycleDatabase).Close()
-		},
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) {
+			return &LifecycleDatabase{Name: "test"}, nil
+		}
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error {
+			return db.Connect()
+		}
+		o.OnApplicationShutdown = func(db *LifecycleDatabase) error {
+			return db.Close()
+		}
 	})
 
-	// Start all
 	if err := di.StartAll(); err != nil {
 		t.Fatalf("StartAll failed: %v", err)
 	}
 
-	// Get instance to verify
 	db := di.Resolve[*LifecycleDatabase]()
 
-	// After start
 	if !db.Connected {
 		t.Error("Database should be connected after StartAll")
 	}
 
-	// Stop all
 	if err := di.StopAll(); err != nil {
 		t.Fatalf("StopAll failed: %v", err)
 	}
 
-	// After stop
 	if !db.Closed {
 		t.Error("Database should be closed after StopAll")
 	}
@@ -109,39 +101,32 @@ func TestDI_Lifecycle_BasicStartStop(t *testing.T) {
 func TestDI_Lifecycle_MultipleProviders(t *testing.T) {
 	di.Reset()
 
-	// Register in order: db, cache, server
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "db"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error { return instance.(*LifecycleDatabase).Connect() },
-		OnStop:  func(instance any) error { return instance.(*LifecycleDatabase).Close() },
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "db"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error { return db.Connect() }
+		o.OnApplicationShutdown = func(db *LifecycleDatabase) error { return db.Close() }
 	})
 
-	di.SingletonWithLifecycle(func() *LifecycleCache {
-		return &LifecycleCache{Name: "cache"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error { return instance.(*LifecycleCache).Start() },
-		OnStop:  func(instance any) error { return instance.(*LifecycleCache).Stop() },
+	di.Singleton[*LifecycleCache](func(o *di.Options[*LifecycleCache]) {
+		o.Constructor = func() (*LifecycleCache, error) { return &LifecycleCache{Name: "cache"}, nil }
+		o.OnApplicationBootstrap = func(c *LifecycleCache) error { return c.Start() }
+		o.OnApplicationShutdown = func(c *LifecycleCache) error { return c.Stop() }
 	})
 
-	di.SingletonWithLifecycle(func() *LifecycleServer {
-		return &LifecycleServer{Port: 8080}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error { return instance.(*LifecycleServer).Start() },
-		OnStop:  func(instance any) error { return instance.(*LifecycleServer).Stop() },
+	di.Singleton[*LifecycleServer](func(o *di.Options[*LifecycleServer]) {
+		o.Constructor = func() (*LifecycleServer, error) { return &LifecycleServer{Port: 8080}, nil }
+		o.OnApplicationBootstrap = func(s *LifecycleServer) error { return s.Start() }
+		o.OnApplicationShutdown = func(s *LifecycleServer) error { return s.Stop() }
 	})
 
-	// Start all
 	if err := di.StartAll(); err != nil {
 		t.Fatalf("StartAll failed: %v", err)
 	}
 
-	// Get instances to verify
 	db := di.Resolve[*LifecycleDatabase]()
 	cache := di.Resolve[*LifecycleCache]()
 	server := di.Resolve[*LifecycleServer]()
 
-	// Verify all started
 	if !db.Connected {
 		t.Error("Database should be connected")
 	}
@@ -152,12 +137,10 @@ func TestDI_Lifecycle_MultipleProviders(t *testing.T) {
 		t.Error("Server should be running")
 	}
 
-	// Stop all (should stop in reverse order: server, cache, db)
 	if err := di.StopAll(); err != nil {
 		t.Fatalf("StopAll failed: %v", err)
 	}
 
-	// Verify all stopped
 	if !db.Closed {
 		t.Error("Database should be closed")
 	}
@@ -169,19 +152,17 @@ func TestDI_Lifecycle_MultipleProviders(t *testing.T) {
 	}
 }
 
-func TestDI_Lifecycle_OnlyOnStart(t *testing.T) {
+func TestDI_Lifecycle_OnlyOnBootstrap(t *testing.T) {
 	di.Reset()
 
 	started := false
 
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "test"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "test"}, nil }
+		o.OnApplicationBootstrap = func(_ *LifecycleDatabase) error {
 			started = true
 			return nil
-		},
-		// No OnStop
+		}
 	})
 
 	if err := di.StartAll(); err != nil {
@@ -189,34 +170,29 @@ func TestDI_Lifecycle_OnlyOnStart(t *testing.T) {
 	}
 
 	if !started {
-		t.Error("OnStart should have been called")
+		t.Error("OnApplicationBootstrap should have been called")
 	}
 
-	// StopAll should not fail even with no OnStop
 	if err := di.StopAll(); err != nil {
 		t.Errorf("StopAll should not fail: %v", err)
 	}
 }
 
-func TestDI_Lifecycle_OnlyOnStop(t *testing.T) {
+func TestDI_Lifecycle_OnlyOnShutdown(t *testing.T) {
 	di.Reset()
 
 	stopped := false
 
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "test"}
-	}, di.LifecycleHooks{
-		// No OnStart
-		OnStop: func(instance any) error {
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "test"}, nil }
+		o.OnApplicationShutdown = func(_ *LifecycleDatabase) error {
 			stopped = true
 			return nil
-		},
+		}
 	})
 
-	// Resolve to create instance
 	_ = di.Resolve[*LifecycleDatabase]()
 
-	// StartAll should not fail even with no OnStart
 	if err := di.StartAll(); err != nil {
 		t.Errorf("StartAll should not fail: %v", err)
 	}
@@ -226,122 +202,98 @@ func TestDI_Lifecycle_OnlyOnStop(t *testing.T) {
 	}
 
 	if !stopped {
-		t.Error("OnStop should have been called")
+		t.Error("OnApplicationShutdown should have been called")
 	}
 }
 
-// --- Error Handling Tests ---
-
-func TestDI_Lifecycle_StartError_Rollback(t *testing.T) {
+func TestDI_Lifecycle_BootstrapError_Rollback(t *testing.T) {
 	di.Reset()
 
-	// Database starts successfully
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "db"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error { return instance.(*LifecycleDatabase).Connect() },
-		OnStop:  func(instance any) error { return instance.(*LifecycleDatabase).Close() },
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "db"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error { return db.Connect() }
+		o.OnApplicationShutdown = func(db *LifecycleDatabase) error { return db.Close() }
 	})
 
-	// Cache fails to start
-	di.SingletonWithLifecycle(func() *LifecycleCache {
-		return &LifecycleCache{Name: "cache"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
+	di.Singleton[*LifecycleCache](func(o *di.Options[*LifecycleCache]) {
+		o.Constructor = func() (*LifecycleCache, error) { return &LifecycleCache{Name: "cache"}, nil }
+		o.OnApplicationBootstrap = func(_ *LifecycleCache) error {
 			return errors.New("cache connection failed")
-		},
-		OnStop: func(instance any) error { return instance.(*LifecycleCache).Stop() },
+		}
+		o.OnApplicationShutdown = func(c *LifecycleCache) error { return c.Stop() }
 	})
 
-	// StartAll should fail
 	err := di.StartAll()
 	if err == nil {
-		t.Fatal("StartAll should fail when OnStart returns error")
+		t.Fatal("StartAll should fail when OnApplicationBootstrap returns error")
 	}
 
 	if !strings.Contains(err.Error(), "cache connection failed") {
 		t.Errorf("Error should mention cache failure: %v", err)
 	}
 
-	// Get database to verify rollback
 	db := di.Resolve[*LifecycleDatabase]()
 
-	// Database should have been rolled back (closed)
 	if !db.Closed {
 		t.Error("Database should be closed after rollback")
 	}
 }
 
-func TestDI_Lifecycle_StopError_ContinuesOthers(t *testing.T) {
+func TestDI_Lifecycle_ShutdownError_ContinuesOthers(t *testing.T) {
 	di.Reset()
 
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "db"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error { return instance.(*LifecycleDatabase).Connect() },
-		OnStop: func(instance any) error {
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "db"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error { return db.Connect() }
+		o.OnApplicationShutdown = func(_ *LifecycleDatabase) error {
 			return errors.New("database close failed")
-		},
+		}
 	})
 
-	di.SingletonWithLifecycle(func() *LifecycleCache {
-		return &LifecycleCache{Name: "cache"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error { return instance.(*LifecycleCache).Start() },
-		OnStop:  func(instance any) error { return instance.(*LifecycleCache).Stop() },
+	di.Singleton[*LifecycleCache](func(o *di.Options[*LifecycleCache]) {
+		o.Constructor = func() (*LifecycleCache, error) { return &LifecycleCache{Name: "cache"}, nil }
+		o.OnApplicationBootstrap = func(c *LifecycleCache) error { return c.Start() }
+		o.OnApplicationShutdown = func(c *LifecycleCache) error { return c.Stop() }
 	})
 
-	// Start all
 	if err := di.StartAll(); err != nil {
 		t.Fatalf("StartAll failed: %v", err)
 	}
 
-	// Get instances
 	cache := di.Resolve[*LifecycleCache]()
 
-	// Stop all - should return error but continue stopping others
 	err := di.StopAll()
 	if err == nil {
-		t.Fatal("StopAll should return error when OnStop fails")
+		t.Fatal("StopAll should return error when OnApplicationShutdown fails")
 	}
 
-	// Cache should still be stopped even though db stop failed
 	if !cache.Stopped {
 		t.Error("Cache should be stopped even though database stop failed")
 	}
 }
 
-// --- Named Lifecycle Tests ---
-
 func TestDI_Lifecycle_Named(t *testing.T) {
 	di.Reset()
 
-	di.SingletonNamedWithLifecycle[*LifecycleDatabase]("primary",
-		func() *LifecycleDatabase { return &LifecycleDatabase{Name: "primary"} },
-		di.LifecycleHooks{
-			OnStart: func(instance any) error { return instance.(*LifecycleDatabase).Connect() },
-			OnStop:  func(instance any) error { return instance.(*LifecycleDatabase).Close() },
-		},
-	)
+	di.SingletonNamed[*LifecycleDatabase]("primary", func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "primary"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error { return db.Connect() }
+		o.OnApplicationShutdown = func(db *LifecycleDatabase) error { return db.Close() }
+	})
 
-	di.SingletonNamedWithLifecycle[*LifecycleDatabase]("backup",
-		func() *LifecycleDatabase { return &LifecycleDatabase{Name: "backup"} },
-		di.LifecycleHooks{
-			OnStart: func(instance any) error { return instance.(*LifecycleDatabase).Connect() },
-			OnStop:  func(instance any) error { return instance.(*LifecycleDatabase).Close() },
-		},
-	)
+	di.SingletonNamed[*LifecycleDatabase]("backup", func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "backup"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error { return db.Connect() }
+		o.OnApplicationShutdown = func(db *LifecycleDatabase) error { return db.Close() }
+	})
 
-	// Start all
 	if err := di.StartAll(); err != nil {
 		t.Fatalf("StartAll failed: %v", err)
 	}
 
-	// Get instances
 	primaryDB := di.ResolveNamed[*LifecycleDatabase]("primary")
 	backupDB := di.ResolveNamed[*LifecycleDatabase]("backup")
 
-	// Both should be started
 	if !primaryDB.Connected {
 		t.Error("Primary database should be connected")
 	}
@@ -349,12 +301,10 @@ func TestDI_Lifecycle_Named(t *testing.T) {
 		t.Error("Backup database should be connected")
 	}
 
-	// Stop all
 	if err := di.StopAll(); err != nil {
 		t.Fatalf("StopAll failed: %v", err)
 	}
 
-	// Both should be stopped
 	if !primaryDB.Closed {
 		t.Error("Primary database should be closed")
 	}
@@ -363,21 +313,17 @@ func TestDI_Lifecycle_Named(t *testing.T) {
 	}
 }
 
-// --- Context Tests ---
-
 func TestDI_Lifecycle_WithContext_Timeout(t *testing.T) {
 	di.Reset()
 
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "slow"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "slow"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error {
 			time.Sleep(100 * time.Millisecond)
-			return instance.(*LifecycleDatabase).Connect()
-		},
+			return db.Connect()
+		}
 	})
 
-	// Context with very short timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
 
@@ -394,21 +340,16 @@ func TestDI_Lifecycle_WithContext_Timeout(t *testing.T) {
 func TestDI_Lifecycle_WithTimeout(t *testing.T) {
 	di.Reset()
 
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "fast"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
-			return instance.(*LifecycleDatabase).Connect()
-		},
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "fast"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error { return db.Connect() }
 	})
 
-	// Should succeed within timeout
 	err := di.StartAllWithTimeout(1 * time.Second)
 	if err != nil {
 		t.Fatalf("StartAllWithTimeout should succeed: %v", err)
 	}
 
-	// Get instance to verify
 	db := di.Resolve[*LifecycleDatabase]()
 
 	if !db.Connected {
@@ -416,17 +357,13 @@ func TestDI_Lifecycle_WithTimeout(t *testing.T) {
 	}
 }
 
-// --- Edge Cases ---
-
 func TestDI_Lifecycle_NoLifecycleProviders(t *testing.T) {
 	di.Reset()
 
-	// Register provider without lifecycle
-	di.Singleton(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "no-lifecycle"}
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "no-lifecycle"}, nil }
 	})
 
-	// StartAll and StopAll should not fail
 	if err := di.StartAll(); err != nil {
 		t.Errorf("StartAll should not fail with no lifecycle providers: %v", err)
 	}
@@ -442,138 +379,97 @@ func TestDI_Lifecycle_MultipleStartStop(t *testing.T) {
 	startCount := 0
 	stopCount := 0
 
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "test"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "test"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error {
 			startCount++
-			return instance.(*LifecycleDatabase).Connect()
-		},
-		OnStop: func(instance any) error {
+			return db.Connect()
+		}
+		o.OnApplicationShutdown = func(db *LifecycleDatabase) error {
 			stopCount++
-			return instance.(*LifecycleDatabase).Close()
-		},
+			return db.Close()
+		}
 	})
 
-	// First start
 	if err := di.StartAll(); err != nil {
 		t.Fatalf("First StartAll failed: %v", err)
 	}
 
-	// Second start - should skip already started
 	if err := di.StartAll(); err != nil {
 		t.Fatalf("Second StartAll failed: %v", err)
 	}
 
-	// OnStart should only be called once
 	if startCount != 1 {
-		t.Errorf("OnStart should be called once, was called %d times", startCount)
+		t.Errorf("OnApplicationBootstrap should be called once, was called %d times", startCount)
 	}
 
-	// Stop
 	if err := di.StopAll(); err != nil {
 		t.Fatalf("StopAll failed: %v", err)
 	}
 
 	if stopCount != 1 {
-		t.Errorf("OnStop should be called once, was called %d times", stopCount)
+		t.Errorf("OnApplicationShutdown should be called once, was called %d times", stopCount)
 	}
 
-	// Second stop - should skip not started
 	if err := di.StopAll(); err != nil {
 		t.Fatalf("Second StopAll failed: %v", err)
 	}
 
-	// OnStop should still only be called once
 	if stopCount != 1 {
-		t.Errorf("OnStop should still be called once, was called %d times", stopCount)
+		t.Errorf("OnApplicationShutdown should still be called once, was called %d times", stopCount)
 	}
 }
 
 func TestDI_Lifecycle_TransientWithLifecycle(t *testing.T) {
 	di.Reset()
 
-	// Transient (non-singleton) with lifecycle
-	di.RegisterWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "transient"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
-			return instance.(*LifecycleDatabase).Connect()
-		},
+	di.Register[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "transient"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error { return db.Connect() }
 	})
 
-	// Transient providers are not cached, so lifecycle might not work as expected
-	// This test documents the behavior
 	if err := di.StartAll(); err != nil {
 		t.Logf("StartAll with transient lifecycle: %v", err)
 	}
 }
 
-// --- Integration Tests ---
-
 func TestDI_Lifecycle_RealWorldScenario(t *testing.T) {
 	di.Reset()
 
-	// Simulate real application startup
 	type Config struct {
 		DBHost string
 	}
 
-	// Register config (no lifecycle)
-	di.Singleton(func() *Config {
-		return &Config{DBHost: "localhost:5432"}
+	di.Singleton[*Config](func(o *di.Options[*Config]) {
+		o.Constructor = func() (*Config, error) { return &Config{DBHost: "localhost:5432"}, nil }
 	})
 
-	// Register database with lifecycle
-	di.SingletonWithLifecycle(func(cfg *Config) *LifecycleDatabase {
-		return &LifecycleDatabase{Name: cfg.DBHost}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
-			return instance.(*LifecycleDatabase).Connect()
-		},
-		OnStop: func(instance any) error {
-			return instance.(*LifecycleDatabase).Close()
-		},
+	di.SingletonFrom[*LifecycleDatabase](func() (*LifecycleDatabase, error) {
+		cfg := di.Resolve[*Config]()
+		return &LifecycleDatabase{Name: cfg.DBHost}, nil
 	})
 
-	// Register cache with lifecycle
-	di.SingletonWithLifecycle(func() *LifecycleCache {
-		return &LifecycleCache{Name: "app-cache"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error {
-			return instance.(*LifecycleCache).Start()
-		},
-		OnStop: func(instance any) error {
-			return instance.(*LifecycleCache).Stop()
-		},
+	// Registra bootstrap/shutdown via Singleton com lifecycle separado
+	di.Singleton[*LifecycleCache](func(o *di.Options[*LifecycleCache]) {
+		o.Constructor = func() (*LifecycleCache, error) { return &LifecycleCache{Name: "app-cache"}, nil }
+		o.OnApplicationBootstrap = func(c *LifecycleCache) error { return c.Start() }
+		o.OnApplicationShutdown = func(c *LifecycleCache) error { return c.Stop() }
 	})
 
-	// Application startup
 	if err := di.StartAll(); err != nil {
 		t.Fatalf("Application startup failed: %v", err)
 	}
 
-	// Get instances to verify
-	db := di.Resolve[*LifecycleDatabase]()
 	cache := di.Resolve[*LifecycleCache]()
 
-	// Verify everything is running
-	if !db.Connected {
-		t.Error("Database should be connected")
-	}
 	if !cache.Started {
 		t.Error("Cache should be started")
 	}
 
-	// Application shutdown
 	if err := di.StopAll(); err != nil {
 		t.Fatalf("Application shutdown failed: %v", err)
 	}
 
-	// Verify clean shutdown
-	if !db.Closed {
-		t.Error("Database should be closed")
-	}
 	if !cache.Stopped {
 		t.Error("Cache should be stopped")
 	}
@@ -582,30 +478,25 @@ func TestDI_Lifecycle_RealWorldScenario(t *testing.T) {
 func TestDI_Lifecycle_DeferPattern(t *testing.T) {
 	di.Reset()
 
-	di.SingletonWithLifecycle(func() *LifecycleDatabase {
-		return &LifecycleDatabase{Name: "test"}
-	}, di.LifecycleHooks{
-		OnStart: func(instance any) error { return instance.(*LifecycleDatabase).Connect() },
-		OnStop:  func(instance any) error { return instance.(*LifecycleDatabase).Close() },
+	di.Singleton[*LifecycleDatabase](func(o *di.Options[*LifecycleDatabase]) {
+		o.Constructor = func() (*LifecycleDatabase, error) { return &LifecycleDatabase{Name: "test"}, nil }
+		o.OnApplicationBootstrap = func(db *LifecycleDatabase) error { return db.Connect() }
+		o.OnApplicationShutdown = func(db *LifecycleDatabase) error { return db.Close() }
 	})
 
-	// Simulate main function pattern
 	func() {
 		if err := di.StartAll(); err != nil {
 			t.Fatalf("Startup failed: %v", err)
 		}
 		defer di.StopAll()
 
-		// Get instance to verify
 		db := di.Resolve[*LifecycleDatabase]()
 
-		// Application logic here
 		if !db.Connected {
 			t.Error("Database should be connected during app logic")
 		}
 	}()
 
-	// After defer - get instance again
 	db := di.Resolve[*LifecycleDatabase]()
 
 	if !db.Closed {

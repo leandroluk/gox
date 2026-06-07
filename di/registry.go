@@ -3,35 +3,38 @@ package di
 import (
 	"fmt"
 	"reflect"
+	"sync"
 )
 
-// registerProvider handles the low-level logic of adding a factory to the registry.
-// It performs basic validation on return types and assignability.
-// Empty name ("") indicates an unnamed (default) provider.
-func registerProvider(factoryFN any, isSingleton bool, asType reflect.Type, name string) {
-	registerProviderWithLifecycle(factoryFN, isSingleton, asType, name, nil)
-}
+var (
+	RegistryMutex    sync.RWMutex
+	ProviderRegistry = map[reflect.Type]map[string]*Provider{}
+)
 
-// registerProviderWithLifecycle registers a provider with optional lifecycle hooks.
-func registerProviderWithLifecycle(factoryFN any, isSingleton bool, asType reflect.Type, name string, hooks *LifecycleHooks) {
-	if factoryFN == nil {
+func registerProvider[T any](opts *Options[T], isSingleton bool, asType reflect.Type, name string) {
+	if opts.Constructor == nil {
 		Fail("di: nil factory function provided")
 	}
 
-	factoryValue := reflect.ValueOf(factoryFN)
+	factoryValue := reflect.ValueOf(opts.Constructor)
 	factoryType := factoryValue.Type()
 
 	if factoryType.Kind() != reflect.Func {
 		Fail("di: factory must be a function")
 	}
 
-	if factoryType.NumOut() != 1 {
-		Fail("di: factory function must return exactly one value")
+	numOut := factoryType.NumOut()
+	if numOut != 2 {
+		Fail("di: factory function must return exactly two values (T, error)")
+	}
+
+	errorType := reflect.TypeFor[error]()
+	if !factoryType.Out(1).AssignableTo(errorType) {
+		Fail("di: second return value of factory function must be an error")
 	}
 
 	outputType := factoryType.Out(0)
 
-	// If an explicit type (like an interface) is provided, check assignability.
 	if asType != nil {
 		if !outputType.AssignableTo(asType) {
 			Fail(fmt.Sprintf("di: factory return type %v is not assignable to %v", outputType, asType))
@@ -44,45 +47,53 @@ func registerProviderWithLifecycle(factoryFN any, isSingleton bool, asType refle
 		nameStr = fmt.Sprintf("named: %q", name)
 	}
 
-	hasLifecycle := hooks != nil && (hooks.OnStart != nil || hooks.OnStop != nil)
-	lifecycleStr := ""
-	if hasLifecycle {
-		lifecycleStr = " with lifecycle"
-	}
-
-	LogDebug("Registering %v (%s, Singleton: %v%s)", outputType, nameStr, isSingleton, lifecycleStr)
-
 	providerInstance := &Provider{
 		Name:            name,
 		FactoryFunction: factoryValue,
 		OutputType:      outputType,
 		IsSingleton:     isSingleton,
-		hasLifecycle:    hasLifecycle,
 	}
 
-	// Wrap lifecycle hooks to work with reflect.Value
-	if hooks != nil {
-		if hooks.OnStart != nil {
-			providerInstance.OnStartHook = func(v reflect.Value) error {
-				return hooks.OnStart(v.Interface())
+	if opts.OnApplicationBootstrap != nil {
+		hook := opts.OnApplicationBootstrap
+		providerInstance.OnStartHook = func(instance reflect.Value) error {
+			val := instance.Interface()
+			typedVal, ok := val.(T)
+			if !ok {
+				return fmt.Errorf("di: cannot apply OnApplicationBootstrap hook for type %T to instance of type %T", typedVal, val)
 			}
+			return hook(typedVal)
 		}
-		if hooks.OnStop != nil {
-			providerInstance.OnStopHook = func(v reflect.Value) error {
-				return hooks.OnStop(v.Interface())
-			}
-		}
+		providerInstance.hasLifecycle = true
 	}
+
+	if opts.OnApplicationShutdown != nil {
+		hook := opts.OnApplicationShutdown
+		providerInstance.OnStopHook = func(instance reflect.Value) error {
+			val := instance.Interface()
+			typedVal, ok := val.(T)
+			if !ok {
+				return fmt.Errorf("di: cannot apply OnApplicationShutdown hook for type %T to instance of type %T", typedVal, val)
+			}
+			return hook(typedVal)
+		}
+		providerInstance.hasLifecycle = true
+	}
+
+	lifecycleStr := ""
+	if providerInstance.hasLifecycle {
+		lifecycleStr = " with lifecycle"
+	}
+
+	LogDebug("Registering %v (%s, Singleton: %v%s)", outputType, nameStr, isSingleton, lifecycleStr)
 
 	RegistryMutex.Lock()
 	defer RegistryMutex.Unlock()
 
-	// Initialize map for this type if doesn't exist
 	if ProviderRegistry[outputType] == nil {
 		ProviderRegistry[outputType] = make(map[string]*Provider)
 	}
 
-	// Check if name already exists
 	if _, exists := ProviderRegistry[outputType][name]; exists {
 		nameDesc := "unnamed provider"
 		if name != "" {
@@ -93,8 +104,7 @@ func registerProviderWithLifecycle(factoryFN any, isSingleton bool, asType refle
 
 	ProviderRegistry[outputType][name] = providerInstance
 
-	// Add to lifecycle management if has hooks
-	if hasLifecycle {
+	if providerInstance.hasLifecycle {
 		addLifecycleProvider(providerInstance)
 	}
 }

@@ -1,121 +1,98 @@
 package di
 
-import (
-	"reflect"
-)
+import "reflect"
 
-// Register adds a transient provider (a new instance is created every time it's resolved).
-func Register(factoryFN any) {
-	registerProvider(factoryFN, false, nil, "")
+func Register[T any](configurator func(*Options[T])) {
+	opts := &Options[T]{}
+	if configurator != nil {
+		configurator(opts)
+	}
+	registerProvider(opts, false, reflect.TypeFor[T](), "")
 }
 
-// RegisterAs adds a transient provider bound to a specific interface or type T.
-func RegisterAs[T any](factoryFN any) {
-	registerProvider(factoryFN, false, reflect.TypeFor[T](), "")
+func RegisterAs[T any](configurator func(*Options[T])) {
+	opts := &Options[T]{}
+	if configurator != nil {
+		configurator(opts)
+	}
+	registerProvider(opts, false, reflect.TypeFor[T](), "")
 }
 
-// RegisterNamed adds a named transient provider.
-func RegisterNamed[T any](name string, factoryFN any) {
+func RegisterNamed[T any](name string, configurator func(*Options[T])) {
 	if name == "" {
 		Fail("di: named registration requires a non-empty name")
 	}
-	registerProvider(factoryFN, false, reflect.TypeFor[T](), name)
+	opts := &Options[T]{}
+	if configurator != nil {
+		configurator(opts)
+	}
+	registerProvider(opts, false, reflect.TypeFor[T](), name)
 }
 
-// Singleton adds a provider that caches its instance after the first resolution.
-func Singleton(factoryFN any) {
-	registerProvider(factoryFN, true, nil, "")
+func Singleton[T any](configurator func(*Options[T])) {
+	opts := &Options[T]{}
+	if configurator != nil {
+		configurator(opts)
+	}
+	registerProvider(opts, true, reflect.TypeFor[T](), "")
 }
 
-// SingletonAs adds a singleton provider bound to a specific interface or type T.
-func SingletonAs[T any](factoryFN any) {
-	registerProvider(factoryFN, true, reflect.TypeFor[T](), "")
+func SingletonAs[T any](configurator func(*Options[T])) {
+	opts := &Options[T]{}
+	if configurator != nil {
+		configurator(opts)
+	}
+	registerProvider(opts, true, reflect.TypeFor[T](), "")
 }
 
-// SingletonNamed adds a named singleton provider.
-func SingletonNamed[T any](name string, factoryFN any) {
+func SingletonNamed[T any](name string, configurator func(*Options[T])) {
 	if name == "" {
 		Fail("di: named registration requires a non-empty name")
 	}
-	registerProvider(factoryFN, true, reflect.TypeFor[T](), name)
+	opts := &Options[T]{}
+	if configurator != nil {
+		configurator(opts)
+	}
+	registerProvider(opts, true, reflect.TypeFor[T](), name)
 }
 
-// SingletonInstance adds an existing instance as a singleton provider for type T.
-func SingletonInstance[T any](instance T) {
-	registerProvider(func() T { return instance }, true, reflect.TypeFor[T](), "")
+func SingletonInstance[T any](instance T, configurator func(*Options[T])) {
+	opts := &Options[T]{}
+	opts.Constructor = func() (T, error) { return instance, nil }
+	if configurator != nil {
+		configurator(opts)
+	}
+	registerProvider(opts, true, reflect.TypeFor[T](), "")
 }
 
-// SingletonInstanceNamed adds an existing instance as a named singleton provider.
-func SingletonInstanceNamed[T any](name string, instance T) {
+func SingletonInstanceNamed[T any](name string, instance T, configurator func(*Options[T])) {
 	if name == "" {
 		Fail("di: named registration requires a non-empty name")
 	}
-	registerProvider(func() T { return instance }, true, reflect.TypeFor[T](), name)
-}
-
-// RegisterWithLifecycle registers a provider with lifecycle hooks.
-// The factory must return a type, and hooks are called during StartAll/StopAll.
-//
-// Example:
-//
-//	di.RegisterWithLifecycle(NewDatabase, di.LifecycleHooks{
-//	    OnStart: func(db any) error {
-//	        return db.(*Database).Connect()
-//	    },
-//	    OnStop: func(db any) error {
-//	        return db.(*Database).Close()
-//	    },
-//	})
-func RegisterWithLifecycle(factoryFN any, hooks LifecycleHooks) {
-	registerProviderWithLifecycle(factoryFN, false, nil, "", &hooks)
-}
-
-// RegisterAsWithLifecycle registers a typed provider with lifecycle hooks.
-func RegisterAsWithLifecycle[T any](factoryFN any, hooks LifecycleHooks) {
-	registerProviderWithLifecycle(factoryFN, false, reflect.TypeFor[T](), "", &hooks)
-}
-
-// RegisterNamedWithLifecycle registers a named provider with lifecycle hooks.
-func RegisterNamedWithLifecycle[T any](name string, factoryFN any, hooks LifecycleHooks) {
-	if name == "" {
-		Fail("di: named registration requires a non-empty name")
+	opts := &Options[T]{}
+	opts.Constructor = func() (T, error) { return instance, nil }
+	if configurator != nil {
+		configurator(opts)
 	}
-	registerProviderWithLifecycle(factoryFN, false, reflect.TypeFor[T](), name, &hooks)
+	registerProvider(opts, true, reflect.TypeFor[T](), name)
 }
 
-// SingletonWithLifecycle registers a singleton provider with lifecycle hooks.
-//
-// Example:
-//
-//	di.SingletonWithLifecycle(NewDatabase, di.LifecycleHooks{
-//	    OnStart: func(db any) error { return db.(*Database).Connect() },
-//	    OnStop:  func(db any) error { return db.(*Database).Close() },
-//	})
-func SingletonWithLifecycle(factoryFN any, hooks LifecycleHooks) {
-	registerProviderWithLifecycle(factoryFN, true, nil, "", &hooks)
+func SingletonFrom[T any](constructor func() (T, error)) {
+	opts := &Options[T]{Constructor: constructor}
+	registerProvider(opts, true, reflect.TypeFor[T](), "")
 }
 
-// SingletonAsWithLifecycle registers a typed singleton with lifecycle hooks.
-func SingletonAsWithLifecycle[T any](factoryFN any, hooks LifecycleHooks) {
-	registerProviderWithLifecycle(factoryFN, true, reflect.TypeFor[T](), "", &hooks)
+func RegisterFrom[T any](constructor func() (T, error)) {
+	opts := &Options[T]{Constructor: constructor}
+	registerProvider(opts, false, reflect.TypeFor[T](), "")
 }
 
-// SingletonNamedWithLifecycle registers a named singleton with lifecycle hooks.
-func SingletonNamedWithLifecycle[T any](name string, factoryFN any, hooks LifecycleHooks) {
-	if name == "" {
-		Fail("di: named registration requires a non-empty name")
-	}
-	registerProviderWithLifecycle(factoryFN, true, reflect.TypeFor[T](), name, &hooks)
-}
-
-// Resolve retrieves the unnamed (default) instance for type T. Panics if no provider is found.
 func Resolve[T any]() T {
 	targetType := reflect.TypeFor[T]()
 	value := resolveByType(targetType)
 	return value.Interface().(T)
 }
 
-// ResolveNamed retrieves a named instance for type T.
 func ResolveNamed[T any](name string) T {
 	if name == "" {
 		Fail("di: ResolveNamed requires a non-empty name")
@@ -125,7 +102,6 @@ func ResolveNamed[T any](name string) T {
 	return value.Interface().(T)
 }
 
-// TryResolve attempts to resolve the unnamed type T without panicking.
 func TryResolve[T any]() (T, bool) {
 	var zero T
 	targetType := reflect.TypeFor[T]()
@@ -144,7 +120,6 @@ func TryResolve[T any]() (T, bool) {
 	return value.Interface().(T), true
 }
 
-// TryResolveNamed attempts to resolve a named type T without panicking.
 func TryResolveNamed[T any](name string) (T, bool) {
 	var zero T
 	if name == "" {
@@ -168,7 +143,6 @@ func TryResolveNamed[T any](name string) (T, bool) {
 	return value.Interface().(T), true
 }
 
-// MustResolve resolves the unnamed type T or panics with a custom error message.
 func MustResolve[T any](customMessage string) T {
 	targetType := reflect.TypeFor[T]()
 
@@ -184,7 +158,6 @@ func MustResolve[T any](customMessage string) T {
 	return value.Interface().(T)
 }
 
-// MustResolveNamed resolves a named type T or panics with a custom error message.
 func MustResolveNamed[T any](name string, customMessage string) T {
 	if name == "" {
 		Fail("di: MustResolveNamed requires a non-empty name")
@@ -204,7 +177,6 @@ func MustResolveNamed[T any](name string, customMessage string) T {
 	return value.Interface().(T)
 }
 
-// ResolveAll retrieves all registered providers for type T as a slice.
 func ResolveAll[T any]() []T {
 	targetType := reflect.TypeFor[T]()
 
@@ -225,7 +197,6 @@ func ResolveAll[T any]() []T {
 	return results
 }
 
-// ResolveAllNamed retrieves all named providers for type T as a map[name]instance.
 func ResolveAllNamed[T any]() map[string]T {
 	targetType := reflect.TypeFor[T]()
 
@@ -253,7 +224,6 @@ func ResolveAllNamed[T any]() map[string]T {
 	return results
 }
 
-// TryResolveAll attempts to resolve all instances of type T without panicking.
 func TryResolveAll[T any]() ([]T, bool) {
 	targetType := reflect.TypeFor[T]()
 
@@ -276,7 +246,6 @@ func TryResolveAll[T any]() ([]T, bool) {
 	return results, true
 }
 
-// TryResolveAllNamed attempts to resolve all named instances of type T without panicking.
 func TryResolveAllNamed[T any]() (map[string]T, bool) {
 	targetType := reflect.TypeFor[T]()
 

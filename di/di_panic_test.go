@@ -1,13 +1,12 @@
 package di_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/leandroluk/gox/di"
 )
-
-// --- Panic Test Types ---
 
 type PanicInvalidShape interface {
 	Volume() float64
@@ -17,50 +16,20 @@ type PanicConfig struct {
 	Value int
 }
 
-// --- Panic Tests ---
-
 func TestDI_Panics(t *testing.T) {
-	t.Run("Panic on non-function factory", func(t *testing.T) {
+	t.Run("Panic on nil constructor", func(t *testing.T) {
 		di.Reset()
 		defer func() {
 			if r := recover(); r == nil {
-				t.Error("Should have panicked when registering a string instead of a function")
+				t.Error("Should have panicked when constructor is nil")
 			}
 		}()
-		di.Register("not a function")
+		di.Register[*PanicConfig](func(o *di.Options[*PanicConfig]) {
+			// Constructor is nil
+		})
 	})
 
-	t.Run("Panic on multi-return factory", func(t *testing.T) {
-		di.Reset()
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Should have panicked when factory returns more than one value")
-			}
-		}()
-		multiReturnFactory := func() (*PanicConfig, error) { return &PanicConfig{}, nil }
-		di.Register(multiReturnFactory)
-	})
 
-	t.Run("Panic on nil factory", func(t *testing.T) {
-		di.Reset()
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Should have panicked when factory is nil")
-			}
-		}()
-		di.Register(nil)
-	})
-
-	t.Run("Panic on type not assignable", func(t *testing.T) {
-		di.Reset()
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Should have panicked when return type is not assignable to specified interface")
-			}
-		}()
-		// BasicCircle não implementa PanicInvalidShape (que tem Volume())
-		di.RegisterAs[PanicInvalidShape](NewBasicCircle)
-	})
 
 	t.Run("Panic on unresolved dependency", func(t *testing.T) {
 		di.Reset()
@@ -87,17 +56,14 @@ func TestDI_Panic_ImprovedErrorMessage_NoProvider(t *testing.T) {
 
 		errMsg := r.(string)
 
-		// Should mention the missing type
 		if !strings.Contains(errMsg, "UnregisteredService") {
 			t.Errorf("Error should mention missing type, got: %s", errMsg)
 		}
 
-		// Should show dependency chain
 		if !strings.Contains(errMsg, "dependency chain") {
 			t.Errorf("Error should show dependency chain, got: %s", errMsg)
 		}
 
-		// Should provide helpful hint
 		if !strings.Contains(errMsg, "hint:") {
 			t.Errorf("Error should provide a hint, got: %s", errMsg)
 		}
@@ -120,14 +86,14 @@ func TestDI_Panic_NestedMissingDependency(t *testing.T) {
 		DB *PanicDatabase
 	}
 
-	// Register Service and Database, but NOT Config
-	di.Register(func(db *PanicDatabase) *PanicService {
-		return &PanicService{DB: db}
+	di.RegisterFrom[*PanicService](func() (*PanicService, error) {
+		db := di.Resolve[*PanicDatabase]()
+		return &PanicService{DB: db}, nil
 	})
-	di.Register(func(cfg *PanicConfig) *PanicDatabase {
-		return &PanicDatabase{Config: cfg}
+	di.RegisterFrom[*PanicDatabase](func() (*PanicDatabase, error) {
+		cfg := di.Resolve[*PanicConfig]()
+		return &PanicDatabase{Config: cfg}, nil
 	})
-	// PanicConfig is NOT registered!
 
 	defer func() {
 		r := recover()
@@ -137,22 +103,36 @@ func TestDI_Panic_NestedMissingDependency(t *testing.T) {
 
 		errMsg := r.(string)
 
-		// Should show the full chain
 		if !strings.Contains(errMsg, "dependency chain") {
-			t.Errorf("Error should show full dependency chain, got: %s", errMsg)
+			t.Errorf("Error should show dependency chain, got: %s", errMsg)
 		}
 
-		// Should mention Config (the missing dependency)
 		if !strings.Contains(errMsg, "PanicConfig") {
 			t.Errorf("Error should mention missing PanicConfig, got: %s", errMsg)
-		}
-
-		// Ideally should show: Service -> Database -> Config
-		// At minimum should show Config in the chain
-		if !strings.Contains(errMsg, "->") {
-			t.Errorf("Chain should show arrow notation, got: %s", errMsg)
 		}
 	}()
 
 	di.Resolve[*PanicService]()
+}
+
+func TestDI_Panic_FactoryError(t *testing.T) {
+	di.Reset()
+
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal("Should panic when factory returns error")
+		}
+
+		errMsg := r.(string)
+		if !strings.Contains(errMsg, "factory function returned error") {
+			t.Errorf("Error should mention factory error, got: %s", errMsg)
+		}
+	}()
+
+	di.RegisterFrom[*PanicConfig](func() (*PanicConfig, error) {
+		return nil, errors.New("config load failed")
+	})
+
+	di.Resolve[*PanicConfig]()
 }

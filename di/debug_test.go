@@ -130,8 +130,10 @@ func TestDebugMode_Integration(t *testing.T) {
 
 	// Captura output durante registro e resolução
 	output := captureOutput(func() {
-		di.RegisterAs[string](func() string {
-			return "test value"
+		di.RegisterAs[string](func(o *di.Options[string]) {
+			o.Constructor = func() (string, error) {
+				return "test value", nil
+			}
 		})
 
 		val := di.Resolve[string]()

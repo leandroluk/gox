@@ -22,9 +22,9 @@ func newRegistry(kindName string) *registry {
 	}
 }
 
-func register[TMessage any, TResult any, THandler any](r *registry, factoryFN any) {
+func register[TMessage any, TResult any, THandler any](r *registry, factoryFN func() (THandler, error)) {
 	// We use the DI to manage the handler's lifecycle
-	di.RegisterAs[THandler](factoryFN)
+	di.RegisterFrom(factoryFN)
 
 	messageKey := normalizeType(reflect.TypeFor[TMessage]())
 

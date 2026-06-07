@@ -6,8 +6,6 @@ import (
 	"github.com/leandroluk/gox/di"
 )
 
-// --- Basic Test Types (v1.0) ---
-
 type BasicShape interface {
 	Area() float64
 }
@@ -37,30 +35,14 @@ type BasicConfig struct {
 	Factor int
 }
 
-// --- Factory Functions ---
-
-func NewBasicConfig() *BasicConfig {
-	return &BasicConfig{Factor: 10}
-}
-
-func NewBasicCircle() *BasicCircle {
-	return &BasicCircle{Radius: 5}
-}
-
-func NewBasicRectangle() *BasicRectangle {
-	return &BasicRectangle{Width: 10, Height: 5}
-}
-
-func NewBasicCalculator(cfg *BasicConfig) *BasicCalculator {
-	return &BasicCalculator{Config: cfg}
-}
-
-// --- Core Functionality Tests ---
-
 func TestDI_RegisterAndResolve(t *testing.T) {
 	di.Reset()
 
-	di.Register(NewBasicConfig)
+	di.Register[*BasicConfig](func(o *di.Options[*BasicConfig]) {
+		o.Constructor = func() (*BasicConfig, error) {
+			return &BasicConfig{Factor: 10}, nil
+		}
+	})
 
 	cfg := di.Resolve[*BasicConfig]()
 	if cfg == nil {
@@ -74,12 +56,15 @@ func TestDI_RegisterAndResolve(t *testing.T) {
 func TestDI_Singleton(t *testing.T) {
 	di.Reset()
 
-	di.Singleton(NewBasicConfig)
+	di.Singleton[*BasicConfig](func(o *di.Options[*BasicConfig]) {
+		o.Constructor = func() (*BasicConfig, error) {
+			return &BasicConfig{Factor: 10}, nil
+		}
+	})
 
 	inst1 := di.Resolve[*BasicConfig]()
 	inst2 := di.Resolve[*BasicConfig]()
 
-	// Compara endereços de memória para garantir que é a mesma instância
 	if inst1 != inst2 {
 		t.Error("Singleton failed: instances are different, memory addresses do not match")
 	}
@@ -88,12 +73,15 @@ func TestDI_Singleton(t *testing.T) {
 func TestDI_Transient(t *testing.T) {
 	di.Reset()
 
-	di.Register(NewBasicConfig)
+	di.Register[*BasicConfig](func(o *di.Options[*BasicConfig]) {
+		o.Constructor = func() (*BasicConfig, error) {
+			return &BasicConfig{Factor: 10}, nil
+		}
+	})
 
 	inst1 := di.Resolve[*BasicConfig]()
 	inst2 := di.Resolve[*BasicConfig]()
 
-	// Devem ser instâncias diferentes (endereços diferentes)
 	if inst1 == inst2 {
 		t.Error("Transient failed: instances should have different memory addresses")
 	}
@@ -102,8 +90,11 @@ func TestDI_Transient(t *testing.T) {
 func TestDI_RegisterAs(t *testing.T) {
 	di.Reset()
 
-	// Registers *BasicCircle bound to BasicShape interface
-	di.RegisterAs[BasicShape](NewBasicCircle)
+	di.RegisterAs[BasicShape](func(o *di.Options[BasicShape]) {
+		o.Constructor = func() (BasicShape, error) {
+			return &BasicCircle{Radius: 5}, nil
+		}
+	})
 
 	shape := di.Resolve[BasicShape]()
 	if shape == nil {
@@ -119,12 +110,15 @@ func TestDI_RegisterAs(t *testing.T) {
 func TestDI_SingletonAs(t *testing.T) {
 	di.Reset()
 
-	di.SingletonAs[BasicShape](NewBasicCircle)
+	di.SingletonAs[BasicShape](func(o *di.Options[BasicShape]) {
+		o.Constructor = func() (BasicShape, error) {
+			return &BasicCircle{Radius: 5}, nil
+		}
+	})
 
 	shape1 := di.Resolve[BasicShape]()
 	shape2 := di.Resolve[BasicShape]()
 
-	// Verifica se são a mesma instância
 	circle1 := shape1.(*BasicCircle)
 	circle2 := shape2.(*BasicCircle)
 
@@ -136,11 +130,9 @@ func TestDI_SingletonAs(t *testing.T) {
 func TestDI_SingletonInstance(t *testing.T) {
 	di.Reset()
 
-	// Cria uma instância específica
 	specificConfig := &BasicConfig{Factor: 42}
-	di.SingletonInstance(specificConfig)
+	di.SingletonInstance(specificConfig, nil)
 
-	// Resolve e verifica se é exatamente a mesma instância
 	resolved := di.Resolve[*BasicConfig]()
 
 	if resolved != specificConfig {
@@ -155,9 +147,16 @@ func TestDI_SingletonInstance(t *testing.T) {
 func TestDI_NestedDependencies(t *testing.T) {
 	di.Reset()
 
-	// Register dependencies
-	di.Singleton(NewBasicConfig)
-	di.Register(NewBasicCalculator) // NewBasicCalculator depends on *BasicConfig
+	di.Singleton[*BasicConfig](func(o *di.Options[*BasicConfig]) {
+		o.Constructor = func() (*BasicConfig, error) {
+			return &BasicConfig{Factor: 10}, nil
+		}
+	})
+
+	di.RegisterFrom[*BasicCalculator](func() (*BasicCalculator, error) {
+		cfg := di.Resolve[*BasicConfig]()
+		return &BasicCalculator{Config: cfg}, nil
+	})
 
 	calc := di.Resolve[*BasicCalculator]()
 
@@ -173,11 +172,15 @@ func TestDI_NestedDependencies(t *testing.T) {
 func TestDI_ResolveAll(t *testing.T) {
 	di.Reset()
 
-	// Register multiple shapes using named instances (v1.3)
-	// Note: In v1.3, you cannot register multiple unnamed providers of the same type
-	di.RegisterNamed[BasicShape]("circle1", func() *BasicCircle { return &BasicCircle{Radius: 1} })
-	di.RegisterNamed[BasicShape]("circle2", func() *BasicCircle { return &BasicCircle{Radius: 2} })
-	di.RegisterNamed[BasicShape]("rectangle", func() *BasicRectangle { return &BasicRectangle{Width: 3, Height: 4} })
+	di.RegisterNamed[BasicShape]("circle1", func(o *di.Options[BasicShape]) {
+		o.Constructor = func() (BasicShape, error) { return &BasicCircle{Radius: 1}, nil }
+	})
+	di.RegisterNamed[BasicShape]("circle2", func(o *di.Options[BasicShape]) {
+		o.Constructor = func() (BasicShape, error) { return &BasicCircle{Radius: 2}, nil }
+	})
+	di.RegisterNamed[BasicShape]("rectangle", func(o *di.Options[BasicShape]) {
+		o.Constructor = func() (BasicShape, error) { return &BasicRectangle{Width: 3, Height: 4}, nil }
+	})
 
 	shapes := di.ResolveAll[BasicShape]()
 
@@ -189,7 +192,6 @@ func TestDI_ResolveAll(t *testing.T) {
 func TestDI_ResolveAll_NoProviders(t *testing.T) {
 	di.Reset()
 
-	// Tenta resolver um tipo que não foi registrado
 	type UnregisteredType struct{}
 
 	results := di.ResolveAll[UnregisteredType]()
@@ -200,14 +202,15 @@ func TestDI_ResolveAll_NoProviders(t *testing.T) {
 }
 
 func TestDI_Reset(t *testing.T) {
-	// Registra alguns providers
-	di.Register(NewBasicConfig)
-	di.Register(NewBasicCircle)
+	di.Register[*BasicConfig](func(o *di.Options[*BasicConfig]) {
+		o.Constructor = func() (*BasicConfig, error) { return &BasicConfig{}, nil }
+	})
+	di.Register[*BasicCircle](func(o *di.Options[*BasicCircle]) {
+		o.Constructor = func() (*BasicCircle, error) { return &BasicCircle{}, nil }
+	})
 
-	// Usa Reset explicitamente
 	di.Reset()
 
-	// Verifica que o registry está vazio
 	di.RegistryMutex.RLock()
 	count := len(di.ProviderRegistry)
 	di.RegistryMutex.RUnlock()

@@ -26,8 +26,8 @@ func TestCQRS_FullFlow(t *testing.T) {
 	ctx := context.Background()
 
 	// Registro do Handler
-	RegisterQueryHandler[TestQuery, TestResponse, *TestHandler](func() *TestHandler {
-		return &TestHandler{}
+	RegisterQueryHandler[TestQuery, TestResponse, *TestHandler](func() (*TestHandler, error) {
+		return &TestHandler{}, nil
 	})
 
 	t.Run("Should execute successfully", func(t *testing.T) {

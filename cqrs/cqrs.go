@@ -10,7 +10,7 @@ type IQueryHandler[TQuery any, TResult any] interface {
 	Handle(ctx context.Context, query TQuery) (TResult, error)
 }
 
-func RegisterQueryHandler[TQuery any, TResult any, THandler IQueryHandler[TQuery, TResult]](factoryFN any) {
+func RegisterQueryHandler[TQuery any, TResult any, THandler IQueryHandler[TQuery, TResult]](factoryFN func() (THandler, error)) {
 	register[TQuery, TResult, THandler](queryRegistry, factoryFN)
 }
 
@@ -26,7 +26,7 @@ type ICommandHandler[TCommand any, TResult any] interface {
 	Handle(ctx context.Context, command TCommand) (TResult, error)
 }
 
-func RegisterCommandHandler[TCommand any, TResult any, THandler ICommandHandler[TCommand, TResult]](factoryFN any) {
+func RegisterCommandHandler[TCommand any, TResult any, THandler ICommandHandler[TCommand, TResult]](factoryFN func() (THandler, error)) {
 	register[TCommand, TResult, THandler](commandRegistry, factoryFN)
 }
 

@@ -7,8 +7,6 @@ import (
 	"github.com/leandroluk/gox/di"
 )
 
-// --- Types for Named Instance Testing ---
-
 type Database interface {
 	Connect() error
 	Query(sql string) ([]string, error)
@@ -47,21 +45,17 @@ type MemoryNamedCache struct {
 func (m *MemoryNamedCache) Get(key string) string { return "memory:" + key }
 func (m *MemoryNamedCache) Set(key, value string) {}
 
-// --- Named Registration Tests ---
-
 func TestDI_RegisterNamed_Basic(t *testing.T) {
 	di.Reset()
 
-	// Register two named databases
-	di.RegisterNamed[Database]("mysql", func() *MySQLDatabase {
-		return &MySQLDatabase{Host: "localhost:3306"}
+	di.RegisterNamed[Database]("mysql", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{Host: "localhost:3306"}, nil }
 	})
 
-	di.RegisterNamed[Database]("postgres", func() *PostgresDatabase {
-		return &PostgresDatabase{Host: "localhost:5432"}
+	di.RegisterNamed[Database]("postgres", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &PostgresDatabase{Host: "localhost:5432"}, nil }
 	})
 
-	// Resolve by name
 	mysql := di.ResolveNamed[Database]("mysql")
 	postgres := di.ResolveNamed[Database]("postgres")
 
@@ -69,7 +63,6 @@ func TestDI_RegisterNamed_Basic(t *testing.T) {
 		t.Fatal("Named providers should resolve successfully")
 	}
 
-	// Verify types
 	if _, ok := mysql.(*MySQLDatabase); !ok {
 		t.Error("mysql should be *MySQLDatabase")
 	}
@@ -94,20 +87,18 @@ func TestDI_RegisterNamed_EmptyName(t *testing.T) {
 		}
 	}()
 
-	di.RegisterNamed[Database]("", func() *MySQLDatabase {
-		return &MySQLDatabase{}
+	di.RegisterNamed[Database]("", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{}, nil }
 	})
 }
 
 func TestDI_RegisterNamed_DuplicateName(t *testing.T) {
 	di.Reset()
 
-	// Register first time - OK
-	di.RegisterNamed[Database]("mysql", func() *MySQLDatabase {
-		return &MySQLDatabase{Host: "host1"}
+	di.RegisterNamed[Database]("mysql", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{Host: "host1"}, nil }
 	})
 
-	// Register same name again - should panic
 	defer func() {
 		r := recover()
 		if r == nil {
@@ -120,25 +111,22 @@ func TestDI_RegisterNamed_DuplicateName(t *testing.T) {
 		}
 	}()
 
-	di.RegisterNamed[Database]("mysql", func() *MySQLDatabase {
-		return &MySQLDatabase{Host: "host2"}
+	di.RegisterNamed[Database]("mysql", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{Host: "host2"}, nil }
 	})
 }
 
 func TestDI_RegisterNamed_UnnamedAndNamed(t *testing.T) {
 	di.Reset()
 
-	// Register unnamed (default)
-	di.RegisterAs[Database](func() *MySQLDatabase {
-		return &MySQLDatabase{Host: "default"}
+	di.RegisterAs[Database](func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{Host: "default"}, nil }
 	})
 
-	// Register named
-	di.RegisterNamed[Database]("postgres", func() *PostgresDatabase {
-		return &PostgresDatabase{Host: "named"}
+	di.RegisterNamed[Database]("postgres", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &PostgresDatabase{Host: "named"}, nil }
 	})
 
-	// Both should work
 	defaultDB := di.Resolve[Database]()
 	namedDB := di.ResolveNamed[Database]("postgres")
 
@@ -155,20 +143,16 @@ func TestDI_RegisterNamed_UnnamedAndNamed(t *testing.T) {
 	}
 }
 
-// --- Singleton Named Tests ---
-
 func TestDI_SingletonNamed(t *testing.T) {
 	di.Reset()
 
-	di.SingletonNamed[NamedCache]("redis", func() *NamedRedisCache {
-		return &NamedRedisCache{Host: "localhost:6379"}
+	di.SingletonNamed[NamedCache]("redis", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{Host: "localhost:6379"}, nil }
 	})
 
-	// Resolve twice
 	cache1 := di.ResolveNamed[NamedCache]("redis")
 	cache2 := di.ResolveNamed[NamedCache]("redis")
 
-	// Should be same instance
 	redis1 := cache1.(*NamedRedisCache)
 	redis2 := cache2.(*NamedRedisCache)
 
@@ -180,20 +164,15 @@ func TestDI_SingletonNamed(t *testing.T) {
 func TestDI_SingletonInstanceNamed(t *testing.T) {
 	di.Reset()
 
-	// Create specific instance
 	specificNamedCache := &NamedRedisCache{Host: "production:6379"}
-	di.SingletonInstanceNamed[NamedCache]("prod-cache", specificNamedCache)
+	di.SingletonInstanceNamed[NamedCache]("prod-cache", specificNamedCache, nil)
 
-	// Resolve
 	resolved := di.ResolveNamed[NamedCache]("prod-cache")
 
-	// Should be exact same instance
 	if resolved.(*NamedRedisCache) != specificNamedCache {
 		t.Error("SingletonInstanceNamed should return exact same instance")
 	}
 }
-
-// --- Resolution Tests ---
 
 func TestDI_ResolveNamed_NotFound(t *testing.T) {
 	di.Reset()
@@ -234,11 +213,10 @@ func TestDI_ResolveNamed_EmptyName(t *testing.T) {
 func TestDI_TryResolveNamed_Success(t *testing.T) {
 	di.Reset()
 
-	di.RegisterNamed[NamedCache]("redis", func() *NamedRedisCache {
-		return &NamedRedisCache{Host: "localhost"}
+	di.RegisterNamed[NamedCache]("redis", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{Host: "localhost"}, nil }
 	})
 
-	// Should succeed
 	if cache, ok := di.TryResolveNamed[NamedCache]("redis"); ok {
 		if cache == nil {
 			t.Error("NamedCache should not be nil")
@@ -251,7 +229,6 @@ func TestDI_TryResolveNamed_Success(t *testing.T) {
 func TestDI_TryResolveNamed_NotFound(t *testing.T) {
 	di.Reset()
 
-	// Should fail gracefully
 	if cache, ok := di.TryResolveNamed[NamedCache]("nonexistent"); ok {
 		t.Error("TryResolveNamed should return false for nonexistent name")
 	} else {
@@ -264,22 +241,18 @@ func TestDI_TryResolveNamed_NotFound(t *testing.T) {
 func TestDI_TryResolveNamed_EmptyName(t *testing.T) {
 	di.Reset()
 
-	// Should fail gracefully with empty name
 	if _, ok := di.TryResolveNamed[NamedCache](""); ok {
 		t.Error("TryResolveNamed should return false for empty name")
 	}
 }
 
-// --- MustResolve Named Tests ---
-
 func TestDI_MustResolveNamed_Success(t *testing.T) {
 	di.Reset()
 
-	di.RegisterNamed[Database]("mysql", func() *MySQLDatabase {
-		return &MySQLDatabase{}
+	di.RegisterNamed[Database]("mysql", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{}, nil }
 	})
 
-	// Should not panic
 	db := di.MustResolveNamed[Database]("mysql", "MySQL is required")
 
 	if db == nil {
@@ -307,25 +280,21 @@ func TestDI_MustResolveNamed_CustomMessage(t *testing.T) {
 	di.MustResolveNamed[Database]("prod-db", customMsg)
 }
 
-// --- ResolveAll Named Tests ---
-
 func TestDI_ResolveAll_WithNamed(t *testing.T) {
 	di.Reset()
 
-	// Register unnamed + 2 named
-	di.RegisterAs[NamedCache](func() *MemoryNamedCache {
-		return &MemoryNamedCache{}
+	di.RegisterAs[NamedCache](func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &MemoryNamedCache{}, nil }
 	})
 
-	di.RegisterNamed[NamedCache]("redis", func() *NamedRedisCache {
-		return &NamedRedisCache{Host: "host1"}
+	di.RegisterNamed[NamedCache]("redis", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{Host: "host1"}, nil }
 	})
 
-	di.RegisterNamed[NamedCache]("redis-backup", func() *NamedRedisCache {
-		return &NamedRedisCache{Host: "host2"}
+	di.RegisterNamed[NamedCache]("redis-backup", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{Host: "host2"}, nil }
 	})
 
-	// ResolveAll should return all 3
 	caches := di.ResolveAll[NamedCache]()
 
 	if len(caches) != 3 {
@@ -336,20 +305,18 @@ func TestDI_ResolveAll_WithNamed(t *testing.T) {
 func TestDI_ResolveAllNamed_OnlyNamed(t *testing.T) {
 	di.Reset()
 
-	// Register unnamed + 2 named
-	di.RegisterAs[NamedCache](func() *MemoryNamedCache {
-		return &MemoryNamedCache{}
+	di.RegisterAs[NamedCache](func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &MemoryNamedCache{}, nil }
 	})
 
-	di.RegisterNamed[NamedCache]("redis", func() *NamedRedisCache {
-		return &NamedRedisCache{Host: "host1"}
+	di.RegisterNamed[NamedCache]("redis", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{Host: "host1"}, nil }
 	})
 
-	di.RegisterNamed[NamedCache]("redis-backup", func() *NamedRedisCache {
-		return &NamedRedisCache{Host: "host2"}
+	di.RegisterNamed[NamedCache]("redis-backup", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{Host: "host2"}, nil }
 	})
 
-	// ResolveAllNamed should return only the 2 named (excludes unnamed)
 	namedNamedCaches := di.ResolveAllNamed[NamedCache]()
 
 	if len(namedNamedCaches) != 2 {
@@ -368,12 +335,10 @@ func TestDI_ResolveAllNamed_OnlyNamed(t *testing.T) {
 func TestDI_ResolveAllNamed_NoNamed(t *testing.T) {
 	di.Reset()
 
-	// Register only unnamed
-	di.RegisterAs[NamedCache](func() *MemoryNamedCache {
-		return &MemoryNamedCache{}
+	di.RegisterAs[NamedCache](func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &MemoryNamedCache{}, nil }
 	})
 
-	// ResolveAllNamed should return nil (no named providers)
 	namedNamedCaches := di.ResolveAllNamed[NamedCache]()
 
 	if namedNamedCaches != nil {
@@ -384,8 +349,12 @@ func TestDI_ResolveAllNamed_NoNamed(t *testing.T) {
 func TestDI_TryResolveAllNamed_Success(t *testing.T) {
 	di.Reset()
 
-	di.RegisterNamed[Database]("mysql", func() *MySQLDatabase { return &MySQLDatabase{} })
-	di.RegisterNamed[Database]("postgres", func() *PostgresDatabase { return &PostgresDatabase{} })
+	di.RegisterNamed[Database]("mysql", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{}, nil }
+	})
+	di.RegisterNamed[Database]("postgres", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &PostgresDatabase{}, nil }
+	})
 
 	namedDBs, ok := di.TryResolveAllNamed[Database]()
 
@@ -412,25 +381,21 @@ func TestDI_TryResolveAllNamed_NotFound(t *testing.T) {
 	}
 }
 
-// --- Real-World Scenarios ---
-
 func TestDI_RealWorld_MultiDatabase(t *testing.T) {
 	di.Reset()
 
-	// Setup: application with multiple databases
-	di.SingletonNamed[Database]("primary", func() *MySQLDatabase {
-		return &MySQLDatabase{Host: "primary.db.local"}
+	di.SingletonNamed[Database]("primary", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{Host: "primary.db.local"}, nil }
 	})
 
-	di.SingletonNamed[Database]("analytics", func() *PostgresDatabase {
-		return &PostgresDatabase{Host: "analytics.db.local"}
+	di.SingletonNamed[Database]("analytics", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &PostgresDatabase{Host: "analytics.db.local"}, nil }
 	})
 
-	di.SingletonNamed[Database]("cache-db", func() *MySQLDatabase {
-		return &MySQLDatabase{Host: "cache.db.local"}
+	di.SingletonNamed[Database]("cache-db", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{Host: "cache.db.local"}, nil }
 	})
 
-	// Usage in app
 	primaryDB := di.ResolveNamed[Database]("primary")
 	analyticsDB := di.ResolveNamed[Database]("analytics")
 
@@ -438,7 +403,6 @@ func TestDI_RealWorld_MultiDatabase(t *testing.T) {
 		t.Fatal("Databases should resolve correctly")
 	}
 
-	// Verify they're different instances
 	if primaryDB == analyticsDB {
 		t.Error("Different named instances should be different objects")
 	}
@@ -447,15 +411,10 @@ func TestDI_RealWorld_MultiDatabase(t *testing.T) {
 func TestDI_RealWorld_NamedCacheFallback(t *testing.T) {
 	di.Reset()
 
-	// Primary cache (required)
-	di.SingletonNamed[NamedCache]("primary", func() *NamedRedisCache {
-		return &NamedRedisCache{Host: "redis-primary"}
+	di.SingletonNamed[NamedCache]("primary", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{Host: "redis-primary"}, nil }
 	})
 
-	// Backup cache (optional)
-	// Not registered
-
-	// Usage
 	primaryNamedCache := di.ResolveNamed[NamedCache]("primary")
 
 	var backupNamedCache NamedCache
@@ -475,19 +434,16 @@ func TestDI_RealWorld_NamedCacheFallback(t *testing.T) {
 func TestDI_RealWorld_MultiTenant(t *testing.T) {
 	di.Reset()
 
-	// Different DB per tenant
-	di.RegisterNamed[Database]("tenant-acme", func() *MySQLDatabase {
-		return &MySQLDatabase{Host: "acme.db"}
+	di.RegisterNamed[Database]("tenant-acme", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{Host: "acme.db"}, nil }
 	})
 
-	di.RegisterNamed[Database]("tenant-globex", func() *PostgresDatabase {
-		return &PostgresDatabase{Host: "globex.db"}
+	di.RegisterNamed[Database]("tenant-globex", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &PostgresDatabase{Host: "globex.db"}, nil }
 	})
 
-	// Resolve based on tenant ID
 	getTenantDB := func(tenantID string) Database {
-		dbName := "tenant-" + tenantID
-		return di.ResolveNamed[Database](dbName)
+		return di.ResolveNamed[Database]("tenant-" + tenantID)
 	}
 
 	acmeDB := getTenantDB("acme")
@@ -501,17 +457,14 @@ func TestDI_RealWorld_MultiTenant(t *testing.T) {
 func TestDI_RealWorld_FeatureToggle(t *testing.T) {
 	di.Reset()
 
-	// Register old implementation (unnamed/default)
-	di.RegisterAs[NamedCache](func() *MemoryNamedCache {
-		return &MemoryNamedCache{}
+	di.RegisterAs[NamedCache](func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &MemoryNamedCache{}, nil }
 	})
 
-	// Register new implementation (named)
-	di.RegisterNamed[NamedCache]("new-redis", func() *NamedRedisCache {
-		return &NamedRedisCache{Host: "new-feature"}
+	di.RegisterNamed[NamedCache]("new-redis", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{Host: "new-feature"}, nil }
 	})
 
-	// Feature flag logic
 	useNewNamedCache := true
 
 	var cache NamedCache
@@ -519,7 +472,7 @@ func TestDI_RealWorld_FeatureToggle(t *testing.T) {
 		if c, ok := di.TryResolveNamed[NamedCache]("new-redis"); ok {
 			cache = c
 		} else {
-			cache = di.Resolve[NamedCache]() // Fallback to default
+			cache = di.Resolve[NamedCache]()
 		}
 	} else {
 		cache = di.Resolve[NamedCache]()
@@ -529,13 +482,10 @@ func TestDI_RealWorld_FeatureToggle(t *testing.T) {
 		t.Fatal("NamedCache should resolve")
 	}
 
-	// With feature enabled, should get Redis
 	if _, ok := cache.(*NamedRedisCache); !ok {
 		t.Error("Should have resolved to NamedRedisCache with feature enabled")
 	}
 }
-
-// --- Edge Cases ---
 
 func TestDI_Named_WithDependencies(t *testing.T) {
 	di.Reset()
@@ -549,17 +499,18 @@ func TestDI_Named_WithDependencies(t *testing.T) {
 		Config *Config
 	}
 
-	// Register unnamed dependencies
-	di.Register(func() *Config {
-		return &Config{Name: "default"}
+	di.Register[*Config](func(o *di.Options[*Config]) {
+		o.Constructor = func() (*Config, error) { return &Config{Name: "default"}, nil }
 	})
 
-	// Register named service with unnamed dependencies
-	di.RegisterNamed[*Service]("api-service", func(db Database, cfg *Config) *Service {
-		return &Service{DB: db, Config: cfg}
+	di.RegisterNamed[*Service]("api-service", func(o *di.Options[*Service]) {
+		o.Constructor = func() (*Service, error) {
+			db := di.Resolve[Database]()
+			cfg := di.Resolve[*Config]()
+			return &Service{DB: db, Config: cfg}, nil
+		}
 	})
 
-	// This should fail because Database dependency is not registered
 	defer func() {
 		if r := recover(); r == nil {
 			t.Fatal("Should panic when unnamed dependency is missing")
@@ -572,17 +523,14 @@ func TestDI_Named_WithDependencies(t *testing.T) {
 func TestDI_Named_TransientVsSingleton(t *testing.T) {
 	di.Reset()
 
-	// Transient named
-	di.RegisterNamed[NamedCache]("transient", func() *MemoryNamedCache {
-		return &MemoryNamedCache{}
+	di.RegisterNamed[NamedCache]("transient", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &MemoryNamedCache{}, nil }
 	})
 
-	// Singleton named
-	di.SingletonNamed[NamedCache]("singleton", func() *NamedRedisCache {
-		return &NamedRedisCache{}
+	di.SingletonNamed[NamedCache]("singleton", func(o *di.Options[NamedCache]) {
+		o.Constructor = func() (NamedCache, error) { return &NamedRedisCache{}, nil }
 	})
 
-	// Transient should create new instances
 	trans1 := di.ResolveNamed[NamedCache]("transient").(*MemoryNamedCache)
 	trans2 := di.ResolveNamed[NamedCache]("transient").(*MemoryNamedCache)
 
@@ -590,7 +538,6 @@ func TestDI_Named_TransientVsSingleton(t *testing.T) {
 		t.Error("Transient named should create different instances")
 	}
 
-	// Singleton should return same instance
 	sing1 := di.ResolveNamed[NamedCache]("singleton").(*NamedRedisCache)
 	sing2 := di.ResolveNamed[NamedCache]("singleton").(*NamedRedisCache)
 
@@ -602,15 +549,18 @@ func TestDI_Named_TransientVsSingleton(t *testing.T) {
 func TestDI_Named_ResetClearsAll(t *testing.T) {
 	di.Reset()
 
-	// Register various providers
-	di.Register(func() *MySQLDatabase { return &MySQLDatabase{} })
-	di.RegisterNamed[Database]("mysql", func() *MySQLDatabase { return &MySQLDatabase{} })
-	di.RegisterNamed[Database]("postgres", func() *PostgresDatabase { return &PostgresDatabase{} })
+	di.Register[*MySQLDatabase](func(o *di.Options[*MySQLDatabase]) {
+		o.Constructor = func() (*MySQLDatabase, error) { return &MySQLDatabase{}, nil }
+	})
+	di.RegisterNamed[Database]("mysql", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &MySQLDatabase{}, nil }
+	})
+	di.RegisterNamed[Database]("postgres", func(o *di.Options[Database]) {
+		o.Constructor = func() (Database, error) { return &PostgresDatabase{}, nil }
+	})
 
-	// Reset
 	di.Reset()
 
-	// Verify registry is empty
 	di.RegistryMutex.RLock()
 	count := len(di.ProviderRegistry)
 	di.RegistryMutex.RUnlock()

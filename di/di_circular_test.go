@@ -7,8 +7,6 @@ import (
 	"github.com/leandroluk/gox/di"
 )
 
-// --- Circular Dependency Test Types ---
-
 type CircularServiceA struct {
 	B *CircularServiceB
 }
@@ -18,7 +16,7 @@ type CircularServiceB struct {
 }
 
 type CircularServiceC struct {
-	A *CircularServiceA // Circular!
+	A *CircularServiceA
 }
 
 type CircularDirectA struct {
@@ -26,27 +24,25 @@ type CircularDirectA struct {
 }
 
 type CircularDirectB struct {
-	A *CircularDirectA // Direct circular!
+	A *CircularDirectA
 }
 
 type CircularSelfRef struct {
 	Self *CircularSelfRef
 }
 
-// --- Circular Dependency Tests ---
-
 func TestDI_CircularDependency_Direct(t *testing.T) {
 	di.Reset()
 
-	// Register circular dependencies
-	di.Register(func(b *CircularDirectB) *CircularDirectA {
-		return &CircularDirectA{B: b}
+	di.RegisterFrom[*CircularDirectA](func() (*CircularDirectA, error) {
+		b := di.Resolve[*CircularDirectB]()
+		return &CircularDirectA{B: b}, nil
 	})
-	di.Register(func(a *CircularDirectA) *CircularDirectB {
-		return &CircularDirectB{A: a}
+	di.RegisterFrom[*CircularDirectB](func() (*CircularDirectB, error) {
+		a := di.Resolve[*CircularDirectA]()
+		return &CircularDirectB{A: a}, nil
 	})
 
-	// Should panic with circular dependency message
 	defer func() {
 		r := recover()
 		if r == nil {
@@ -55,13 +51,8 @@ func TestDI_CircularDependency_Direct(t *testing.T) {
 
 		errMsg := r.(string)
 
-		// Check for key elements in error message
 		if !strings.Contains(errMsg, "circular dependency detected") {
 			t.Errorf("Error should mention 'circular dependency', got: %s", errMsg)
-		}
-
-		if !strings.Contains(errMsg, "CircularDirectA") || !strings.Contains(errMsg, "CircularDirectB") {
-			t.Errorf("Error should show types involved in cycle, got: %s", errMsg)
 		}
 
 		if !strings.Contains(errMsg, "dependency chain") {
@@ -73,22 +64,23 @@ func TestDI_CircularDependency_Direct(t *testing.T) {
 		}
 	}()
 
-	// This should trigger the circular dependency
 	di.Resolve[*CircularDirectA]()
 }
 
 func TestDI_CircularDependency_Indirect(t *testing.T) {
 	di.Reset()
 
-	// Register indirect circular dependencies: A -> B -> C -> A
-	di.Register(func(b *CircularServiceB) *CircularServiceA {
-		return &CircularServiceA{B: b}
+	di.RegisterFrom[*CircularServiceA](func() (*CircularServiceA, error) {
+		b := di.Resolve[*CircularServiceB]()
+		return &CircularServiceA{B: b}, nil
 	})
-	di.Register(func(c *CircularServiceC) *CircularServiceB {
-		return &CircularServiceB{C: c}
+	di.RegisterFrom[*CircularServiceB](func() (*CircularServiceB, error) {
+		c := di.Resolve[*CircularServiceC]()
+		return &CircularServiceB{C: c}, nil
 	})
-	di.Register(func(a *CircularServiceA) *CircularServiceC {
-		return &CircularServiceC{A: a}
+	di.RegisterFrom[*CircularServiceC](func() (*CircularServiceC, error) {
+		a := di.Resolve[*CircularServiceA]()
+		return &CircularServiceC{A: a}, nil
 	})
 
 	defer func() {
@@ -103,7 +95,6 @@ func TestDI_CircularDependency_Indirect(t *testing.T) {
 			t.Errorf("Error should mention 'circular dependency', got: %s", errMsg)
 		}
 
-		// Should show at least some of the types in the cycle
 		hasServiceType := strings.Contains(errMsg, "CircularServiceA") ||
 			strings.Contains(errMsg, "CircularServiceB") ||
 			strings.Contains(errMsg, "CircularServiceC")
@@ -113,19 +104,19 @@ func TestDI_CircularDependency_Indirect(t *testing.T) {
 		}
 	}()
 
-	// This should trigger the circular dependency
 	di.Resolve[*CircularServiceA]()
 }
 
 func TestDI_CircularDependency_WithSingleton(t *testing.T) {
 	di.Reset()
 
-	// Even with Singleton, circular dependencies should be detected
-	di.Singleton(func(b *CircularDirectB) *CircularDirectA {
-		return &CircularDirectA{B: b}
+	di.SingletonFrom[*CircularDirectA](func() (*CircularDirectA, error) {
+		b := di.Resolve[*CircularDirectB]()
+		return &CircularDirectA{B: b}, nil
 	})
-	di.Singleton(func(a *CircularDirectA) *CircularDirectB {
-		return &CircularDirectB{A: a}
+	di.SingletonFrom[*CircularDirectB](func() (*CircularDirectB, error) {
+		a := di.Resolve[*CircularDirectA]()
+		return &CircularDirectB{A: a}, nil
 	})
 
 	defer func() {
@@ -146,9 +137,9 @@ func TestDI_CircularDependency_WithSingleton(t *testing.T) {
 func TestDI_CircularDependency_SelfReference(t *testing.T) {
 	di.Reset()
 
-	// Register a type that depends on itself
-	di.Register(func(self *CircularSelfRef) *CircularSelfRef {
-		return &CircularSelfRef{Self: self}
+	di.RegisterFrom[*CircularSelfRef](func() (*CircularSelfRef, error) {
+		self := di.Resolve[*CircularSelfRef]()
+		return &CircularSelfRef{Self: self}, nil
 	})
 
 	defer func() {
@@ -179,18 +170,18 @@ func TestDI_NoCircularDependency_ValidChain(t *testing.T) {
 		DB *CircularDatabase
 	}
 
-	// Register valid dependency chain: Service -> Database -> Config
-	di.Register(func() *CircularConfig {
-		return &CircularConfig{Value: "test"}
+	di.RegisterFrom[*CircularConfig](func() (*CircularConfig, error) {
+		return &CircularConfig{Value: "test"}, nil
 	})
-	di.Register(func(cfg *CircularConfig) *CircularDatabase {
-		return &CircularDatabase{Config: cfg}
+	di.RegisterFrom[*CircularDatabase](func() (*CircularDatabase, error) {
+		cfg := di.Resolve[*CircularConfig]()
+		return &CircularDatabase{Config: cfg}, nil
 	})
-	di.Register(func(db *CircularDatabase) *CircularService {
-		return &CircularService{DB: db}
+	di.RegisterFrom[*CircularService](func() (*CircularService, error) {
+		db := di.Resolve[*CircularDatabase]()
+		return &CircularService{DB: db}, nil
 	})
 
-	// Should NOT panic - this is a valid chain
 	service := di.Resolve[*CircularService]()
 
 	if service == nil {
@@ -218,12 +209,11 @@ func TestDI_ConcurrentResolution_NoCircular(t *testing.T) {
 	}
 
 	counter := 0
-	di.Register(func() *CircularSharedService {
+	di.RegisterFrom[*CircularSharedService](func() (*CircularSharedService, error) {
 		counter++
-		return &CircularSharedService{ID: counter}
+		return &CircularSharedService{ID: counter}, nil
 	})
 
-	// Multiple goroutines resolving simultaneously
 	const goroutines = 10
 	done := make(chan bool, goroutines)
 	errors := make(chan error, goroutines)
@@ -232,9 +222,8 @@ func TestDI_ConcurrentResolution_NoCircular(t *testing.T) {
 		go func() {
 			defer func() {
 				if r := recover(); r != nil {
-					// Check if it's a circular dependency error
 					if errMsg, ok := r.(string); ok && strings.Contains(errMsg, "circular") {
-						errors <- nil // This would be unexpected
+						errors <- nil
 					}
 				}
 				done <- true

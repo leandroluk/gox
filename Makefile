@@ -27,8 +27,9 @@ help:
 	@echo "  make tag-create <version> # apenas cria tags localmente"
 	@echo "  make tag-push <version>   # apenas envia tags para remote"
 	@echo "  make tag-delete <version> # deleta tags local e remotamente"
-	@echo "  make tag-minor            # aumenta o patch (ex: v0.7.10 -> v0.7.11) e remove anterior"
-	@echo "  make tag-major            # aumenta o minor (ex: v0.7.10 -> v0.8.0) e remove anterior"
+	@echo "  make tag-patch            # aumenta o patch (ex: v0.7.10 -> v0.7.11) e remove anterior"
+	@echo "  make tag-minor            # aumenta o minor (ex: v0.7.10 -> v0.8.0) e remove anterior"
+	@echo "  make tag-major            # aumenta o major (ex: v0.8.0 -> v1.0.0) e remove anterior"
 	@echo "  make tag-purge            # remove tag's anteriores e depreciadas"
 
 .PHONY: test
@@ -89,13 +90,17 @@ tag-delete:
 tag:
 	$(GO) run ./_tools/tag --create --push "$(filter-out $@,$(MAKECMDGOALS))"
 
+.PHONY: tag-patch
+tag-patch:
+	$(GO) run ./_tools/tag --bump patch
+
 .PHONY: tag-minor
 tag-minor:
-	$(GO) run ./_tools/tag --bump patch
+	$(GO) run ./_tools/tag --bump minor
 
 .PHONY: tag-major
 tag-major:
-	$(GO) run ./_tools/tag --bump minor
+	$(GO) run ./_tools/tag --bump major
 
 .PHONY: tag-purge
 tag-purge:

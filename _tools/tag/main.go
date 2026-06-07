@@ -16,7 +16,7 @@ func main() {
 	push := flag.Bool("push", false, "Push tags to remote")
 	delete := flag.Bool("delete", false, "Delete tags locally and remotely")
 	purge := flag.Bool("purge", false, "Delete all tags EXCEPT the ones for the specified version")
-	bump := flag.String("bump", "", "Bump version: 'minor' (2nd number) or 'patch' (3rd number)")
+	bump := flag.String("bump", "", "Bump version: 'major' (2nd number) or 'patch' (3rd number)")
 	flag.Parse()
 
 	// If purge is specified
@@ -34,8 +34,8 @@ func main() {
 	var version string
 	var oldVersion string
 	if *bump != "" {
-		if *bump != "minor" && *bump != "patch" {
-			fmt.Println("Error: --bump must be 'minor' or 'patch'")
+		if *bump != "major" && *bump != "minor" {
+			fmt.Println("Error: --bump must be 'major' (2nd number) or 'minor' (3rd number)")
 			os.Exit(1)
 		}
 
@@ -98,14 +98,27 @@ func main() {
 }
 
 func getLatestTag() string {
-	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0")
+	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0", "--match", "v*")
 	out, err := cmd.Output()
-	if err != nil {
-		// Try fallback to just getting the last tag appropriately if describe fails (e.g. shallow clone)
-		// But usually describe --tags --abbrev=0 is best.
-		return ""
+	if err == nil {
+		tag := strings.TrimSpace(string(out))
+		if !strings.Contains(tag, "/") {
+			return tag
+		}
 	}
-	return strings.TrimSpace(string(out))
+
+	cmd = exec.Command("git", "tag", "--list", "v*", "--sort=-v:refname")
+	out, err = cmd.Output()
+	if err == nil {
+		tags := strings.Split(strings.TrimSpace(string(out)), "\n")
+		for _, t := range tags {
+			t = strings.TrimSpace(t)
+			if t != "" && !strings.Contains(t, "/") {
+				return t
+			}
+		}
+	}
+	return ""
 }
 
 func bumpVersion(ver, level string) string {
@@ -125,10 +138,10 @@ func bumpVersion(ver, level string) string {
 	patch, _ := strconv.Atoi(parts[2])
 
 	switch level {
-	case "minor": // bumping 2nd number
+	case "major": // bumping 2nd number
 		minor++
 		patch = 0
-	case "patch": // bumping 3rd number
+	case "minor": // bumping 3rd number
 		patch++
 	}
 
@@ -230,26 +243,24 @@ func pushTags(version string, modules []string) {
 }
 
 func deleteTags(version string, modules []string) {
-	if tagExists(version) {
-		fmt.Printf("Deleting tag %s...\n", version)
-		run("git", "tag", "-d", version)
-	} else {
-		fmt.Printf("Tag %s not found locally, skipping delete.\n", version)
+	deleteFn := func(tag string) {
+		fmt.Printf("Deleting release and tag %s...\n", tag)
+		// Use gh release delete which also deletes the tag if --cleanup-tag is provided
+		exec.Command("gh", "release", "delete", tag, "--cleanup-tag", "-y").Run()
+		
+		// Fallback in case gh command fails (e.g. release doesn't exist)
+		exec.Command("git", "tag", "-d", tag).Run()
+		exec.Command("git", "push", "origin", "--delete", tag).Run()
 	}
-	run("git", "push", "origin", ":refs/tags/"+version)
+
+	deleteFn(version)
 
 	runParallel(modules, 5, func(mod string) {
 		tag := fmt.Sprintf("%s/%s", mod, version)
-		if tagExists(tag) {
-			fmt.Printf("Deleting tag %s...\n", tag)
-			run("git", "tag", "-d", tag)
-		} else {
-			fmt.Printf("Tag %s not found locally, skipping delete.\n", tag)
-		}
-		run("git", "push", "origin", ":refs/tags/"+tag)
+		deleteFn(tag)
 	})
 
-	fmt.Println("Tag deletion completed (some tags may not have existed).")
+	fmt.Println("Tag and release deletion completed (some may not have existed).")
 }
 
 func purgeTags(version string) {

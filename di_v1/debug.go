@@ -1,4 +1,4 @@
-package di
+package di_v1
 
 import "fmt"
 

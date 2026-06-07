@@ -1,11 +1,10 @@
-package di
+package di_v1
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
 )
-
 
 type resolutionContext struct {
 	chain []reflect.Type
@@ -133,5 +132,3 @@ func callFactoryWithDependencies(providerInstance *Provider, ctx *resolutionCont
 
 	return outputValues[0]
 }
-
-

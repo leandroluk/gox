@@ -1,4 +1,4 @@
-package di_test
+package di_v1_test
 
 import (
 	"context"

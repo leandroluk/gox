@@ -1,4 +1,4 @@
-package di_test
+package di_v1_test
 
 import (
 	"errors"
@@ -28,8 +28,6 @@ func TestDI_Panics(t *testing.T) {
 			// Constructor is nil
 		})
 	})
-
-
 
 	t.Run("Panic on unresolved dependency", func(t *testing.T) {
 		di.Reset()

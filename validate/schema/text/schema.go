@@ -2,6 +2,7 @@
 package text
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 
@@ -93,6 +94,22 @@ func (schemaValue *Schema) OneOf(values ...string) *Schema {
 	}
 	schemaValue.rules.Put(rule.OneOf(CodeOneOf, values...))
 	return schemaValue
+}
+
+func (schemaValue *Schema) Enum(values ...any) *Schema {
+	if len(values) == 0 {
+		return schemaValue
+	}
+	strValues := make([]string, len(values))
+	for i, v := range values {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.String {
+			strValues[i] = rv.String()
+		} else {
+			strValues[i] = fmt.Sprint(v)
+		}
+	}
+	return schemaValue.OneOf(strValues...)
 }
 
 func (schemaValue *Schema) Contains(value string) *Schema {

@@ -11,15 +11,18 @@ import (
 )
 
 type NumberFieldBuilder[T any] struct {
-	schema     *Schema[T]
-	fieldInfo  fieldInfo[T]
-	required   bool
-	isDefault  bool
-	minSet     bool
-	maxSet     bool
-	minValue   float64
-	maxValue   float64
-	fieldIndex int
+	schema       *Schema[T]
+	fieldInfo    fieldInfo[T]
+	required     bool
+	isDefault    bool
+	minSet       bool
+	maxSet       bool
+	minValue     float64
+	maxValue     float64
+	fieldIndex   int
+	hasDefault   bool
+	defaultValue float64
+	defaultFunc  func() float64
 }
 
 func (b *NumberFieldBuilder[T]) build() {
@@ -48,6 +51,12 @@ func (b *NumberFieldBuilder[T]) build() {
 			if required {
 				ctx.AddIssue("number.required", "required")
 				return nil, ctx.Error()
+			}
+			if b.defaultFunc != nil {
+				return convertToFieldType(b.defaultFunc(), fieldType), nil
+			}
+			if b.hasDefault {
+				return convertToFieldType(b.defaultValue, fieldType), nil
 			}
 			return reflect.Zero(fieldType).Interface(), nil
 		}
@@ -105,6 +114,21 @@ func (b *NumberFieldBuilder[T]) Required() *NumberFieldBuilder[T] {
 
 func (b *NumberFieldBuilder[T]) IsDefault() *NumberFieldBuilder[T] {
 	b.isDefault = true
+	b.build()
+	return b
+}
+
+func (b *NumberFieldBuilder[T]) Default(value float64) *NumberFieldBuilder[T] {
+	b.hasDefault = true
+	b.defaultValue = value
+	b.defaultFunc = nil
+	b.build()
+	return b
+}
+
+func (b *NumberFieldBuilder[T]) DefaultFunc(fn func() float64) *NumberFieldBuilder[T] {
+	b.defaultFunc = fn
+	b.hasDefault = false
 	b.build()
 	return b
 }
@@ -277,9 +301,12 @@ func (b *NumberFieldBuilder[T]) Transform(fn func(value any) (any, error)) *Sche
 				ctx.AddIssue("number.required", "required")
 				return nil, ctx.Error()
 			}
-			// If missing/null and optional, do we transform?
-			// Usually we don't. We return zero value.
-			// If user wants to transform zero value, they can use Defaults.
+			if b.defaultFunc != nil {
+				return convertToFieldType(b.defaultFunc(), fieldType), nil
+			}
+			if b.hasDefault {
+				return convertToFieldType(b.defaultValue, fieldType), nil
+			}
 			return reflect.Zero(fieldType).Interface(), nil
 		}
 

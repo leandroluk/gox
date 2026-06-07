@@ -121,6 +121,29 @@ func TestText_OneOf(t *testing.T) {
 	}
 }
 
+func TestText_Enum(t *testing.T) {
+	type MyRole string
+	const (
+		Admin MyRole = "admin"
+		User  MyRole = "user"
+	)
+
+	s := text.New().Enum(Admin, User)
+
+	got, err := s.Validate("admin")
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if got != "admin" {
+		t.Fatalf("expected %q, got %q", "admin", got)
+	}
+
+	_, err = s.Validate("other")
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+}
+
 func TestText_Numeric_Number_Hexadecimal_HexColor(t *testing.T) {
 	sNumeric := text.New().Numeric()
 	_, err := sNumeric.Validate("12345")

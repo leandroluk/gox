@@ -124,6 +124,12 @@ func (b *TextFieldBuilder[T]) OneOf(values ...string) *TextFieldBuilder[T] {
 	return b
 }
 
+func (b *TextFieldBuilder[T]) Enum(values ...any) *TextFieldBuilder[T] {
+	b.textSchema.Enum(values...)
+	b.build()
+	return b
+}
+
 func (b *TextFieldBuilder[T]) RequiredIf(path string, op ConditionOp, expected any) *TextFieldBuilder[T] {
 	b.build()
 	b.schema.RequiredIf(path, op, expected)

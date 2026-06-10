@@ -8,42 +8,78 @@ import (
 	"time"
 )
 
-// convertStringToType converts a string to the specified type.
+// convertStringToType converts a string to the specified type T.
+// Supports pointer types: Get[*string], Get[*int32], etc.
 func convertStringToType[T any](raw string) (T, error) {
 	var zero T
 	targetType := reflect.TypeFor[T]()
 
-	// Special Types
-	switch targetType {
+	if targetType.Kind() == reflect.Ptr {
+		elemType := targetType.Elem()
+		elemVal, err := convertStringToValue(raw, elemType)
+		if err != nil {
+			return zero, err
+		}
+		ptr := reflect.New(elemType)
+		ptr.Elem().Set(elemVal)
+		result, ok := ptr.Interface().(T)
+		if !ok {
+			return zero, fmt.Errorf("env: cannot cast to %v", targetType)
+		}
+		return result, nil
+	}
+
+	v, err := convertStringToValue(raw, targetType)
+	if err != nil {
+		return zero, err
+	}
+	result, ok := v.Interface().(T)
+	if !ok {
+		return zero, fmt.Errorf("env: cannot cast to %v", targetType)
+	}
+	return result, nil
+}
+
+// convertStringToValue converts a string to a reflect.Value of type t.
+func convertStringToValue(raw string, t reflect.Type) (reflect.Value, error) {
+	switch t {
 	case reflect.TypeFor[json.RawMessage]():
 		if !json.Valid([]byte(raw)) {
-			return zero, fmt.Errorf("env: invalid JSON")
+			return reflect.Value{}, fmt.Errorf("env: invalid JSON")
 		}
-		return any(json.RawMessage(raw)).(T), nil
+		return reflect.ValueOf(json.RawMessage(raw)), nil
 	case reflect.TypeFor[time.Time]():
-		t, err := parseTime(raw)
-		return any(t).(T), err
+		v, err := parseTime(raw)
+		return reflect.ValueOf(v), err
 	case reflect.TypeFor[time.Duration]():
-		d, err := time.ParseDuration(raw)
-		return any(d).(T), err
+		v, err := time.ParseDuration(raw)
+		return reflect.ValueOf(v), err
 	}
 
-	// Basic Kinds
-	switch targetType.Kind() {
+	switch t.Kind() {
 	case reflect.String:
-		return any(raw).(T), nil
+		return reflect.ValueOf(raw).Convert(t), nil
 	case reflect.Bool:
 		v, err := strconv.ParseBool(raw)
-		return any(v).(T), err
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		return reflect.ValueOf(v).Convert(t), nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		v, err := strconv.ParseInt(raw, 10, targetType.Bits())
-		return reflect.ValueOf(v).Convert(targetType).Interface().(T), err
+		v, err := strconv.ParseInt(raw, 10, t.Bits())
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		return reflect.ValueOf(v).Convert(t), nil
 	case reflect.Float32, reflect.Float64:
-		v, err := strconv.ParseFloat(raw, targetType.Bits())
-		return reflect.ValueOf(v).Convert(targetType).Interface().(T), err
+		v, err := strconv.ParseFloat(raw, t.Bits())
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		return reflect.ValueOf(v).Convert(t), nil
 	}
 
-	return zero, fmt.Errorf("env: unsupported type %v", targetType)
+	return reflect.Value{}, fmt.Errorf("env: unsupported type %v", t)
 }
 
 // parseTime parses a time string.

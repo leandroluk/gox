@@ -224,6 +224,51 @@ UNCLOSED="unclosed
 	}
 }
 
+func TestEnv_Pointers(t *testing.T) {
+	os.Setenv("PTR_STR", "hello")
+	os.Setenv("PTR_INT32", "42")
+	os.Setenv("PTR_FLOAT64", "3.14")
+	os.Setenv("PTR_BOOL", "true")
+
+	t.Run("*string", func(t *testing.T) {
+		v := env.Get[*string]("PTR_STR")
+		if v == nil || *v != "hello" {
+			t.Errorf("expected *string=hello, got %v", v)
+		}
+	})
+	t.Run("*string not found returns nil", func(t *testing.T) {
+		v := env.Get[*string]("NOT_FOUND_PTR")
+		if v != nil {
+			t.Errorf("expected nil, got %v", v)
+		}
+	})
+	t.Run("*int32", func(t *testing.T) {
+		v := env.Get[*int32]("PTR_INT32")
+		if v == nil || *v != 42 {
+			t.Errorf("expected *int32=42, got %v", v)
+		}
+	})
+	t.Run("*float64", func(t *testing.T) {
+		v := env.Get[*float64]("PTR_FLOAT64")
+		if v == nil || *v != 3.14 {
+			t.Errorf("expected *float64=3.14, got %v", v)
+		}
+	})
+	t.Run("*bool", func(t *testing.T) {
+		v := env.Get[*bool]("PTR_BOOL")
+		if v == nil || !*v {
+			t.Errorf("expected *bool=true, got %v", v)
+		}
+	})
+	t.Run("*int32 invalid returns nil", func(t *testing.T) {
+		os.Setenv("PTR_INT32_BAD", "not-a-number")
+		v := env.Get[*int32]("PTR_INT32_BAD")
+		if v != nil {
+			t.Errorf("expected nil on parse error, got %v", v)
+		}
+	})
+}
+
 func TestEnv_MoreEdgeCases(t *testing.T) {
 	// Length 1 value (covers parser.go line 60 skip)
 	tmpFile := filepath.Join(t.TempDir(), "short.env")

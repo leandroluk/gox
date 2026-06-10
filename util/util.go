@@ -2,7 +2,9 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"maps"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -85,4 +87,18 @@ func StructFromMap[T any](input map[string]any) (T, error) {
 
 	err = json.Unmarshal(bytes, &result)
 	return result, err
+}
+
+func Throws(errList ...error) {
+	var format strings.Builder
+	noEmptyErrList := make([]any, 0, len(errList))
+	for _, e := range errList {
+		if e != nil {
+			noEmptyErrList = append(noEmptyErrList, e)
+			format.WriteString("%w: ")
+		}
+	}
+	if len(noEmptyErrList) > 0 {
+		panic(fmt.Errorf(strings.TrimSuffix(format.String(), ": "), noEmptyErrList...))
+	}
 }

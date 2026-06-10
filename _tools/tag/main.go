@@ -16,7 +16,7 @@ func main() {
 	push := flag.Bool("push", false, "Push tags to remote")
 	delete := flag.Bool("delete", false, "Delete tags locally and remotely")
 	purge := flag.Bool("purge", false, "Delete all tags EXCEPT the ones for the specified version")
-	bump := flag.String("bump", "", "Bump version: 'major' (2nd number) or 'patch' (3rd number)")
+	bump := flag.String("bump", "", "Bump version: 'major' (2nd number), 'minor' (3rd number) or 'patch' (suffix)")
 	flag.Parse()
 
 	// If purge is specified
@@ -34,8 +34,8 @@ func main() {
 	var version string
 	var oldVersion string
 	if *bump != "" {
-		if *bump != "major" && *bump != "minor" {
-			fmt.Println("Error: --bump must be 'major' (2nd number) or 'minor' (3rd number)")
+		if *bump != "major" && *bump != "minor" && *bump != "patch" {
+			fmt.Println("Error: --bump must be 'major' (2nd number), 'minor' (3rd number) or 'patch' (suffix)")
 			os.Exit(1)
 		}
 
@@ -58,7 +58,7 @@ func main() {
 		args := flag.Args()
 		if len(args) < 1 || args[0] == "" {
 			if !*create && !*push && !*delete {
-				fmt.Println("Usage: go run . [--bump minor|patch] | [--create|--push|--delete <version>]")
+				fmt.Println("Usage: go run . [--bump major|minor|patch] | [--create|--push|--delete <version>]")
 				os.Exit(1)
 			}
 			fmt.Println("Error: version is required unless --bump is used")
@@ -122,12 +122,18 @@ func getLatestTag() string {
 }
 
 func bumpVersion(ver, level string) string {
-	// Remove v prefix if exists
 	cleanVer := strings.TrimPrefix(ver, "v")
 
-	parts := strings.Split(cleanVer, ".")
+	var coreVer, suffix string
+	if idx := strings.Index(cleanVer, "-"); idx != -1 {
+		coreVer = cleanVer[:idx]
+		suffix = cleanVer[idx+1:]
+	} else {
+		coreVer = cleanVer
+	}
+
+	parts := strings.Split(coreVer, ".")
 	if len(parts) < 3 {
-		// Handle cases like "0.1" -> treat as "0.1.0"
 		for len(parts) < 3 {
 			parts = append(parts, "0")
 		}
@@ -137,15 +143,36 @@ func bumpVersion(ver, level string) string {
 	minor, _ := strconv.Atoi(parts[1])
 	patch, _ := strconv.Atoi(parts[2])
 
+	major = 0
+
 	switch level {
-	case "major": // bumping 2nd number
+	case "major":
 		minor++
 		patch = 0
-	case "minor": // bumping 3rd number
+		suffix = ""
+	case "minor":
 		patch++
+		suffix = ""
+	case "patch":
+		if suffix == "" {
+			suffix = "patch.1"
+		} else if strings.HasPrefix(suffix, "patch.") {
+			patchNumStr := strings.TrimPrefix(suffix, "patch.")
+			patchNum, err := strconv.Atoi(patchNumStr)
+			if err != nil {
+				suffix = "patch.1"
+			} else {
+				suffix = fmt.Sprintf("patch.%d", patchNum+1)
+			}
+		} else {
+			suffix = "patch.1"
+		}
 	}
 
 	newVer := fmt.Sprintf("%d.%d.%d", major, minor, patch)
+	if suffix != "" {
+		newVer = newVer + "-" + suffix
+	}
 	return "v" + newVer
 }
 

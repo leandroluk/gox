@@ -27,9 +27,9 @@ help:
 	@echo "  make tag-create <version> # apenas cria tags localmente"
 	@echo "  make tag-push <version>   # apenas envia tags para remote"
 	@echo "  make tag-delete <version> # deleta tags local e remotamente"
-	@echo "  make tag-patch            # aumenta o patch (ex: v0.7.10 -> v0.7.11) e remove anterior"
-	@echo "  make tag-minor            # aumenta o minor (ex: v0.7.10 -> v0.8.0) e remove anterior"
-	@echo "  make tag-major            # aumenta o major (ex: v0.8.0 -> v1.0.0) e remove anterior"
+	@echo "  make tag-patch            # adiciona/aumenta sufixo -patch.X (ex: v0.13.0 -> v0.13.0-patch.1) e remove anterior"
+	@echo "  make tag-minor            # aumenta o minor (3º dígito) (ex: v0.13.0 -> v0.13.1) e remove anterior"
+	@echo "  make tag-major            # aumenta o major (2º dígito) (ex: v0.13.0 -> v0.14.0) e remove anterior"
 	@echo "  make tag-purge            # remove tag's anteriores e depreciadas"
 
 .PHONY: test

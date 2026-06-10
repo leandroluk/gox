@@ -12,21 +12,21 @@ di.Register[T](func(b di.Builder[T]))
 
 One call = one provider. Builder methods:
 
-| Method | Description |
-|---|---|
-| `b.New(func() (T, error))` | Unnamed provider via constructor |
-| `b.Named(name, func() (T, error))` | Named provider via constructor |
-| `b.Instance(val T)` | Pre-built instance (always singleton) |
-| `b.Extend(ptr *I)` | Alias another registered type |
+| Method                             | Description                           |
+| ---------------------------------- | ------------------------------------- |
+| `b.New(func() (T, error))`         | Unnamed provider via constructor      |
+| `b.Named(name, func() (T, error))` | Named provider via constructor        |
+| `b.Instance(val T)`                | Pre-built instance (always singleton) |
+| `b.Extend(ptr *I)`                 | Alias another registered type         |
 
 Each returns `*Registration[T]` for chaining:
 
-| Chain | Description |
-|---|---|
+| Chain                                    | Description               |
+| ---------------------------------------- | ------------------------- |
 | `.Scope(ScopeSingleton\|ScopeTransient)` | Default: `ScopeSingleton` |
-| `.Multi()` | Include in `ResolveAll` |
-| `.OnStart(func(T) error)` | Lifecycle start hook |
-| `.OnStop(func(T) error)` | Lifecycle stop hook |
+| `.Multi()`                               | Include in `ResolveAll`   |
+| `.OnStart(func(T) error)`                | Lifecycle start hook      |
+| `.OnStop(func(T) error)`                 | Lifecycle stop hook       |
 
 ### Resolution
 

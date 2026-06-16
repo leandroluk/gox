@@ -6,6 +6,7 @@ import (
 
 	"github.com/leandroluk/gox/validate/internal/ast"
 	"github.com/leandroluk/gox/validate/internal/engine"
+	"github.com/leandroluk/gox/validate/internal/issues"
 	"github.com/leandroluk/gox/validate/schema"
 	"github.com/leandroluk/gox/validate/schema/duration"
 )
@@ -28,10 +29,34 @@ func (b *DurationFieldBuilder[T]) build() {
 			astVal, ok := value.(ast.Value)
 			if ok && (astVal.IsMissing() || astVal.IsNull()) {
 				ctx.AddIssue("duration.required", "required")
-				return nil, ctx.Error()
+				return nil, nil
 			}
 		}
-		return b.durationSchema.ValidateAny(value, ctx.Options)
+		out, err := b.durationSchema.ValidateAny(value, ctx.Options)
+		if err != nil {
+			if vErr, ok := err.(*issues.ValidationError); ok {
+				basePath := ctx.PathString()
+				for _, issue := range vErr.Issues {
+					var fullPath string
+					if basePath == "" {
+						fullPath = issue.Path
+					} else if issue.Path != "" {
+						if issue.Path[0] == '[' {
+							fullPath = basePath + issue.Path
+						} else {
+							fullPath = basePath + "." + issue.Path
+						}
+					} else {
+						fullPath = basePath
+					}
+					issue.Path = fullPath
+					ctx.Issues.Add(issue)
+				}
+				return nil, nil
+			}
+			return nil, err
+		}
+		return out, nil
 	}
 
 	compiled, err := newFieldFromInfo(b.fieldInfo, validator)
@@ -220,15 +245,33 @@ func (b *DurationFieldBuilder[T]) Transform(fn func(value any) (any, error)) *Sc
 			astVal, ok := value.(ast.Value)
 			if ok && (astVal.IsMissing() || astVal.IsNull()) {
 				ctx.AddIssue("duration.required", "required")
-				return nil, ctx.Error()
+				return nil, nil
 			}
 		}
-
 		out, err := b.durationSchema.ValidateAny(value, ctx.Options)
 		if err != nil {
+			if vErr, ok := err.(*issues.ValidationError); ok {
+				basePath := ctx.PathString()
+				for _, issue := range vErr.Issues {
+					var fullPath string
+					if basePath == "" {
+						fullPath = issue.Path
+					} else if issue.Path != "" {
+						if issue.Path[0] == '[' {
+							fullPath = basePath + issue.Path
+						} else {
+							fullPath = basePath + "." + issue.Path
+						}
+					} else {
+						fullPath = basePath
+					}
+					issue.Path = fullPath
+					ctx.Issues.Add(issue)
+				}
+				return nil, nil
+			}
 			return nil, err
 		}
-
 		return fn(out)
 	}
 

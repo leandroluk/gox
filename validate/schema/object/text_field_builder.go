@@ -4,6 +4,7 @@ package object
 import (
 	"github.com/leandroluk/gox/validate/internal/ast"
 	"github.com/leandroluk/gox/validate/internal/engine"
+	"github.com/leandroluk/gox/validate/internal/issues"
 	"github.com/leandroluk/gox/validate/schema"
 	"github.com/leandroluk/gox/validate/schema/text"
 )
@@ -22,16 +23,38 @@ func (b *TextFieldBuilder[T]) build() {
 	}
 
 	validator := func(ctx *engine.Context, value any) (any, error) {
-		// Manually check required to ensure it works even if applyFieldPlan logic changes
 		if b.required {
 			astVal, ok := value.(ast.Value)
 			if ok && (astVal.IsMissing() || astVal.IsNull()) {
 				ctx.AddIssue("text.required", "required")
-				return nil, ctx.Error()
+				return nil, nil
 			}
-			// If not ast.Value, we assume it's present or handled by ValidateAny
 		}
-		return b.textSchema.ValidateAny(value, ctx.Options)
+		out, err := b.textSchema.ValidateAny(value, ctx.Options)
+		if err != nil {
+			if vErr, ok := err.(*issues.ValidationError); ok {
+				basePath := ctx.PathString()
+				for _, issue := range vErr.Issues {
+					var fullPath string
+					if basePath == "" {
+						fullPath = issue.Path
+					} else if issue.Path != "" {
+						if issue.Path[0] == '[' {
+							fullPath = basePath + issue.Path
+						} else {
+							fullPath = basePath + "." + issue.Path
+						}
+					} else {
+						fullPath = basePath
+					}
+					issue.Path = fullPath
+					ctx.Issues.Add(issue)
+				}
+				return nil, nil
+			}
+			return nil, err
+		}
+		return out, nil
 	}
 
 	compiled, err := newFieldFromInfo(b.fieldInfo, validator)
@@ -279,16 +302,30 @@ func (b *TextFieldBuilder[T]) Transform(fn func(value any) (any, error)) *Schema
 			}
 		}
 
-		// 1. Validate as Text
-		// We use b.textSchema directly.
 		out, err := b.textSchema.ValidateAny(value, ctx.Options)
 		if err != nil {
+			if vErr, ok := err.(*issues.ValidationError); ok {
+				basePath := ctx.PathString()
+				for _, issue := range vErr.Issues {
+					var fullPath string
+					if basePath == "" {
+						fullPath = issue.Path
+					} else if issue.Path != "" {
+						if issue.Path[0] == '[' {
+							fullPath = basePath + issue.Path
+						} else {
+							fullPath = basePath + "." + issue.Path
+						}
+					} else {
+						fullPath = basePath
+					}
+					issue.Path = fullPath
+					ctx.Issues.Add(issue)
+				}
+				return nil, nil
+			}
 			return nil, err
 		}
-		// If textSchema returned nil (soft failure or optional), we might skip transform?
-		// But ValidateAny usually returns value if success.
-
-		// 2. Transform
 		return fn(out)
 	}
 

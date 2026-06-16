@@ -238,6 +238,14 @@ func (s *Schema[T]) Validate(input any, optionList ...schema.Option) (T, error) 
 	return s.validateWithOptions(input, options)
 }
 
+func (s *Schema[T]) MustValidate(input any, optionList ...schema.Option) T {
+	result, err := s.Validate(input, optionList...)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 func (s *Schema[T]) ValidateAny(input any, options schema.Options) (any, error) {
 	return s.validateWithOptions(input, options)
 }

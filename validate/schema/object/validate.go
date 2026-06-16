@@ -32,6 +32,9 @@ func (s *Schema[T]) validateWithOptions(input any, options schema.Options) (T, e
 	}
 
 	output, _ := s.validateAST(context, value)
+	if ptr, ok := input.(*T); ok && ptr != nil {
+		*ptr = output
+	}
 	return output, context.Error()
 }
 
@@ -147,9 +150,6 @@ func (s *Schema[T]) applyFieldPlan(context *engine.Context, root ast.Value, fiel
 		len(fieldValue.requiredConditions) == 0 &&
 		len(fieldValue.comparators) == 0 &&
 		!fieldValue.required {
-		if child.IsMissing() || child.IsNull() {
-			return fieldActionSkip, false
-		}
 		return fieldActionValidate, false
 	}
 

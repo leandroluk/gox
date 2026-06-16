@@ -240,12 +240,17 @@ func buildEntry(e *entry) any {
 		}
 		e.once.Do(func() {
 			e.resolving.Store(true)
+			defer func() {
+				e.resolving.Store(false)
+				if r := recover(); r != nil {
+					panic(fmt.Sprintf("di: factory panic for %v: %v", e.typ, r))
+				}
+			}()
 			val, err := e.factory()
 			if err != nil {
 				panic(fmt.Sprintf("di: factory error for %v: %v", e.typ, err))
 			}
 			e.cached = val
-			e.resolving.Store(false)
 		})
 		return e.cached
 	}

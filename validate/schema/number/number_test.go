@@ -108,24 +108,25 @@ func TestNumber_Comparators(t *testing.T) {
 		schema   *number.Schema[int]
 		input    int
 		wantCode string
+		wantMsg  string
 	}{
-		{"eq_ok", number.New[int]().Eq(10), 10, ""},
-		{"eq_fail", number.New[int]().Eq(10), 9, number.CodeEq},
+		{"eq_ok", number.New[int]().Eq(10), 10, "", ""},
+		{"eq_fail", number.New[int]().Eq(10), 9, number.CodeEq, number.Msg.Eq},
 
-		{"ne_ok", number.New[int]().Ne(10), 9, ""},
-		{"ne_fail", number.New[int]().Ne(10), 10, number.CodeNe},
+		{"ne_ok", number.New[int]().Ne(10), 9, "", ""},
+		{"ne_fail", number.New[int]().Ne(10), 10, number.CodeNe, number.Msg.Ne},
 
-		{"gt_ok", number.New[int]().Gt(10), 11, ""},
-		{"gt_fail", number.New[int]().Gt(10), 10, number.CodeGt},
+		{"gt_ok", number.New[int]().Gt(10), 11, "", ""},
+		{"gt_fail", number.New[int]().Gt(10), 10, number.CodeGt, number.Msg.Gt},
 
-		{"gte_ok", number.New[int]().Gte(10), 10, ""},
-		{"gte_fail", number.New[int]().Gte(10), 9, number.CodeGte},
+		{"gte_ok", number.New[int]().Gte(10), 10, "", ""},
+		{"gte_fail", number.New[int]().Gte(10), 9, number.CodeGte, number.Msg.Gte},
 
-		{"lt_ok", number.New[int]().Lt(10), 9, ""},
-		{"lt_fail", number.New[int]().Lt(10), 10, number.CodeLt},
+		{"lt_ok", number.New[int]().Lt(10), 9, "", ""},
+		{"lt_fail", number.New[int]().Lt(10), 10, number.CodeLt, number.Msg.Lt},
 
-		{"lte_ok", number.New[int]().Lte(10), 10, ""},
-		{"lte_fail", number.New[int]().Lte(10), 11, number.CodeLte},
+		{"lte_ok", number.New[int]().Lte(10), 10, "", ""},
+		{"lte_fail", number.New[int]().Lte(10), 11, number.CodeLte, number.Msg.Lte},
 	}
 
 	for _, tc := range cases {
@@ -141,7 +142,10 @@ func TestNumber_Comparators(t *testing.T) {
 
 			validationError := testkit.RequireValidationError(t, err)
 			if validationError.Issues[0].Code != tc.wantCode {
-				t.Fatalf("expected code %q, got %q", tc.wantCode, validationError.Issues[0].Code)
+				t.Fatalf("code: want %q got %q", tc.wantCode, validationError.Issues[0].Code)
+			}
+			if validationError.Issues[0].Message != tc.wantMsg {
+				t.Fatalf("msg: want %q got %q", tc.wantMsg, validationError.Issues[0].Message)
 			}
 		})
 	}

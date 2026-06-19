@@ -9,7 +9,6 @@ import (
 	"github.com/leandroluk/gox/validate/internal/ruleset"
 	"github.com/leandroluk/gox/validate/internal/testkit"
 	"github.com/leandroluk/gox/validate/schema/object"
-	"github.com/leandroluk/gox/validate/schema/object/rule"
 )
 
 type Sample struct {
@@ -56,7 +55,7 @@ func TestObject_TypeMismatchMeta(t *testing.T) {
 func TestObject_StructOnly_DoesNotValidateFieldsOrFieldConditions(t *testing.T) {
 	s := object.New(func(target *Sample, schemaValue *object.Schema[Sample]) {
 		schemaValue.Field(&target.Name).Text().Required().
-			RequiredIf("other", rule.OpPresent, nil)
+			RequiredIf("other", object.Present, nil)
 	}).StructOnly()
 
 	_, err := s.Validate(ast.ObjectValue(map[string]ast.Value{
@@ -107,7 +106,7 @@ type Cross struct {
 func TestObject_RequiredIf_DeepPathWithArrayIndex(t *testing.T) {
 	s := object.New(func(target *Sample, schemaValue *object.Schema[Sample]) {
 		schemaValue.Field(&target.Name).Text().Required().
-			RequiredIf("meta.items[0].flag", rule.OpEq, true)
+			RequiredIf("meta.items[0].flag", object.Eq, true)
 	})
 
 	_, err := s.Validate(ast.ObjectValue(map[string]ast.Value{
@@ -182,7 +181,7 @@ type Excluded struct {
 
 func TestObject_ExcludedIf_FailsWhenConditionMetAndFieldPresent(t *testing.T) {
 	s := object.New(func(target *Excluded, schemaValue *object.Schema[Excluded]) {
-		schemaValue.Field(&target.A).Text().ExcludedIf("role", rule.OpEq, "admin")
+		schemaValue.Field(&target.A).Text().ExcludedIf("role", object.Eq, "admin")
 		schemaValue.Field(&target.Role).Text()
 	})
 
@@ -215,7 +214,7 @@ type SkipUnless struct {
 
 func TestObject_SkipUnless_SkipsFieldValidationWhenNotMet(t *testing.T) {
 	s := object.New(func(target *SkipUnless, schemaValue *object.Schema[SkipUnless]) {
-		schemaValue.Field(&target.A).Text().Required().SkipUnless("flag", rule.OpEq, true)
+		schemaValue.Field(&target.A).Text().Required().SkipUnless("flag", object.Eq, true)
 		schemaValue.Field(&target.Flag).Boolean()
 	})
 

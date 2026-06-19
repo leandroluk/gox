@@ -144,52 +144,6 @@ func TestText_Enum(t *testing.T) {
 	}
 }
 
-func TestText_Numeric_Number_Hexadecimal_HexColor(t *testing.T) {
-	sNumeric := text.New().Numeric()
-	_, err := sNumeric.Validate("12345")
-	if err != nil {
-		t.Fatalf("expected nil error, got %v", err)
-	}
-	_, err = sNumeric.Validate("12a")
-	validationError := testkit.RequireValidationError(t, err)
-	if validationError.Issues[0].Code != text.CodeNumeric {
-		t.Fatalf("expected code %q, got %q", text.CodeNumeric, validationError.Issues[0].Code)
-	}
-
-	sNumber := text.New().Number()
-	_, err = sNumber.Validate("-10.5e2")
-	if err != nil {
-		t.Fatalf("expected nil error, got %v", err)
-	}
-	_, err = sNumber.Validate("NaN")
-	validationError = testkit.RequireValidationError(t, err)
-	if validationError.Issues[0].Code != text.CodeNumber {
-		t.Fatalf("expected code %q, got %q", text.CodeNumber, validationError.Issues[0].Code)
-	}
-
-	sHex := text.New().Hexadecimal()
-	_, err = sHex.Validate("0x1A2b")
-	if err != nil {
-		t.Fatalf("expected nil error, got %v", err)
-	}
-	_, err = sHex.Validate("xz")
-	validationError = testkit.RequireValidationError(t, err)
-	if validationError.Issues[0].Code != text.CodeHexadecimal {
-		t.Fatalf("expected code %q, got %q", text.CodeHexadecimal, validationError.Issues[0].Code)
-	}
-
-	sHexColor := text.New().HexColor()
-	_, err = sHexColor.Validate("#fff")
-	if err != nil {
-		t.Fatalf("expected nil error, got %v", err)
-	}
-	_, err = sHexColor.Validate("fff")
-	validationError = testkit.RequireValidationError(t, err)
-	if validationError.Issues[0].Code != text.CodeHexColor {
-		t.Fatalf("expected code %q, got %q", text.CodeHexColor, validationError.Issues[0].Code)
-	}
-}
-
 func TestText_CreditCard(t *testing.T) {
 	s := text.New().CreditCard()
 
@@ -513,5 +467,137 @@ func TestText_File_Dir_FilePath_DirPath_Image(t *testing.T) {
 	validationError = testkit.RequireValidationError(t, err)
 	if validationError.Issues[0].Code != text.CodeImage {
 		t.Fatalf("expected code %q, got %q", text.CodeImage, validationError.Issues[0].Code)
+	}
+}
+
+func TestText_FormatRules(t *testing.T) {
+	cases := []struct {
+		name    string
+		schema  *text.Schema
+		code    string
+		msg     string
+		valid   string
+		invalid string
+	}{
+		{"ASCII",        text.New().ASCII(),        text.CodeASCII,        text.Msg.ASCII,        "hello",                                  "\x80abc"},
+		{"Base64",       text.New().Base64(),       text.CodeBase64,       text.Msg.Base64,       "aGVsbG8=",                               "not!base64"},
+		{"Base64RawURL", text.New().Base64RawURL(), text.CodeBase64RawURL, text.Msg.Base64RawURL, "aGVsbG8",                                "not!base"},
+		{"Base64URL",    text.New().Base64URL(),    text.CodeBase64URL,    text.Msg.Base64URL,    "aGVsbG8=",                               "not!base64"},
+		{"CIDR",         text.New().CIDR(),         text.CodeCIDR,         text.Msg.CIDR,         "192.168.0.0/24",                         "192.168.0.0"},
+		{"DataURI",      text.New().DataURI(),      text.CodeDataURI,      text.Msg.DataURI,      "data:text/plain,hello",                  "not-data-uri"},
+		{"Email",        text.New().Email(),        text.CodeEmail,        text.Msg.Email,        "a@b.com",                                "not-email"},
+		{"FQDN",         text.New().FQDN(),         text.CodeFQDN,         text.Msg.FQDN,         "example.com",                            "localhost"},
+		{"HexColor",     text.New().HexColor(),     text.CodeHexColor,     text.Msg.HexColor,     "#fff",                                   "fff"},
+		{"Hexadecimal",  text.New().Hexadecimal(),  text.CodeHexadecimal,  text.Msg.Hexadecimal,  "0x1A2b",                                 "xz"},
+		{"Hostname",     text.New().Hostname(),     text.CodeHostname,     text.Msg.Hostname,     "localhost",                              "not a hostname!"},
+		{"HSL",          text.New().HSL(),          text.CodeHSL,          text.Msg.HSL,          "hsl(360,100%,50%)",                      "hsl(361,100%,50%)"},
+		{"HSLA",         text.New().HSLA(),         text.CodeHSLA,         text.Msg.HSLA,         "hsla(360,100%,50%,0.5)",                 "hsla(361,100%,50%,0.5)"},
+		{"HTTPURL",      text.New().HTTPURL(),      text.CodeHTTPURL,      text.Msg.HTTPURL,      "https://example.com",                    "ftp://example.com"},
+		{"IP",           text.New().IP(),           text.CodeIP,           text.Msg.IP,           "1.2.3.4",                                "999.999.999.999"},
+		{"IPv4",         text.New().IPv4(),         text.CodeIPv4,         text.Msg.IPv4,         "1.2.3.4",                                "::1"},
+		{"IPv6",         text.New().IPv6(),         text.CodeIPv6,         text.Msg.IPv6,         "::1",                                    "1.2.3.4"},
+		{"Lowercase",    text.New().Lowercase(),    text.CodeLowercase,    text.Msg.Lowercase,    "hello",                                  "Hello"},
+		{"MAC",          text.New().MAC(),          text.CodeMAC,          text.Msg.MAC,          "00:1A:2B:3C:4D:5E",                      "not-mac"},
+		{"Multibyte",    text.New().Multibyte(),    text.CodeMultibyte,    text.Msg.Multibyte,    "こんにちは",                              "hello"},
+		{"Number",       text.New().Number(),       text.CodeNumber,       text.Msg.Number,       "-10.5e2",                                "NaN"},
+		{"Numeric",      text.New().Numeric(),      text.CodeNumeric,      text.Msg.Numeric,      "12345",                                  "12a"},
+		{"Port",         text.New().Port(),         text.CodePort,         text.Msg.Port,         "8080",                                   "99999"},
+		{"PrintASCII",   text.New().PrintASCII(),   text.CodePrintASCII,   text.Msg.PrintASCII,   "Hello!",                                 "\x01abc"},
+		{"RGB",          text.New().RGB(),          text.CodeRGB,          text.Msg.RGB,          "rgb(255,0,0)",                           "rgb(256,0,0)"},
+		{"RGBA",         text.New().RGBA(),         text.CodeRGBA,         text.Msg.RGBA,         "rgba(255,0,0,0.5)",                      "rgba(256,0,0,0.5)"},
+		{"URI",          text.New().URI(),          text.CodeURI,          text.Msg.URI,          "/api/v1",                                "not a uri"},
+		{"URL",          text.New().URL(),          text.CodeURL,          text.Msg.URL,          "https://example.com",                    "not-url"},
+		{"URNRFC2141",   text.New().URNRFC2141(),   text.CodeURNRFC2141,   text.Msg.URNRFC2141,   "urn:isbn:0451450523",                    "not-urn"},
+		{"UUID",         text.New().UUID(),         text.CodeUUID,         text.Msg.UUID,         "919108f7-52d1-4320-9bad-49fcf84a4756",   "not-a-uuid"},
+		{"UUID3",        text.New().UUID3(),        text.CodeUUID3,        text.Msg.UUID3,        "a3bb189e-8bf9-3888-9912-ace4e6543002",   "919108f7-52d1-4320-9bad-49fcf84a4756"},
+		{"UUID4",        text.New().UUID4(),        text.CodeUUID4,        text.Msg.UUID4,        "919108f7-52d1-4320-9bad-49fcf84a4756",   "a3bb189e-8bf9-3888-9912-ace4e6543002"},
+		{"UUID5",        text.New().UUID5(),        text.CodeUUID5,        text.Msg.UUID5,        "2ed6657d-e927-568b-95e3-af9a98b11f78",   "919108f7-52d1-4320-9bad-49fcf84a4756"},
+		{"Uppercase",    text.New().Uppercase(),    text.CodeUppercase,    text.Msg.Uppercase,    "HELLO",                                  "Hello"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := tc.schema.Validate(tc.valid); err != nil {
+				t.Fatalf("valid %q failed: %v", tc.valid, err)
+			}
+			_, err := tc.schema.Validate(tc.invalid)
+			ve := testkit.RequireValidationError(t, err)
+			if ve.Issues[0].Code != tc.code {
+				t.Fatalf("code: want %q got %q", tc.code, ve.Issues[0].Code)
+			}
+			if ve.Issues[0].Message != tc.msg {
+				t.Fatalf("msg: want %q got %q", tc.msg, ve.Issues[0].Message)
+			}
+		})
+	}
+}
+
+func TestText_StringParamRules(t *testing.T) {
+	cases := []struct {
+		name    string
+		schema  *text.Schema
+		code    string
+		msg     string
+		valid   string
+		invalid string
+	}{
+		{"Eq",            text.New().Eq("abc"),           text.CodeEq,            text.Msg.Eq,            "abc",  "xyz"},
+		{"Ne",            text.New().Ne("abc"),           text.CodeNe,            text.Msg.Ne,            "xyz",  "abc"},
+		{"EqIgnoreCase",  text.New().EqIgnoreCase("abc"), text.CodeEqI,           text.Msg.EqIgnoreCase,  "ABC",  "xyz"},
+		{"NeIgnoreCase",  text.New().NeIgnoreCase("abc"), text.CodeNeI,           text.Msg.NeIgnoreCase,  "xyz",  "ABC"},
+		{"Contains",      text.New().Contains("x"),       text.CodeContains,      text.Msg.Contains,      "axb",  "abc"},
+		{"Excludes",      text.New().Excludes("x"),       text.CodeExcludes,      text.Msg.Excludes,      "abc",  "axb"},
+		{"StartsWith",    text.New().StartsWith("x"),     text.CodeStartsWith,    text.Msg.StartsWith,    "xabc", "abc"},
+		{"NotStartsWith", text.New().NotStartsWith("x"),  text.CodeNotStartsWith, text.Msg.NotStartsWith, "abc",  "xabc"},
+		{"EndsWith",      text.New().EndsWith("x"),       text.CodeEndsWith,      text.Msg.EndsWith,      "abcx", "abc"},
+		{"NotEndsWith",   text.New().NotEndsWith("x"),    text.CodeNotEndsWith,   text.Msg.NotEndsWith,   "abc",  "abcx"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := tc.schema.Validate(tc.valid); err != nil {
+				t.Fatalf("valid %q failed: %v", tc.valid, err)
+			}
+			_, err := tc.schema.Validate(tc.invalid)
+			ve := testkit.RequireValidationError(t, err)
+			if ve.Issues[0].Code != tc.code {
+				t.Fatalf("code: want %q got %q", tc.code, ve.Issues[0].Code)
+			}
+			if ve.Issues[0].Message != tc.msg {
+				t.Fatalf("msg: want %q got %q", tc.msg, ve.Issues[0].Message)
+			}
+		})
+	}
+}
+
+func TestText_LengthAndPattern(t *testing.T) {
+	cases := []struct {
+		name    string
+		schema  *text.Schema
+		code    string
+		msg     string
+		valid   string
+		invalid string
+	}{
+		{"Min",     text.New().Min(3),           text.CodeMin,     text.Msg.Min,     "abc", "ab"},
+		{"Max",     text.New().Max(3),           text.CodeMax,     text.Msg.Max,     "abc", "abcd"},
+		{"Len",     text.New().Len(3),           text.CodeLen,     text.Msg.Len,     "abc", "ab"},
+		{"Pattern", text.New().Pattern(`^\d+$`), text.CodePattern, text.Msg.Pattern, "123", "abc"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := tc.schema.Validate(tc.valid); err != nil {
+				t.Fatalf("valid %q failed: %v", tc.valid, err)
+			}
+			_, err := tc.schema.Validate(tc.invalid)
+			ve := testkit.RequireValidationError(t, err)
+			if ve.Issues[0].Code != tc.code {
+				t.Fatalf("code: want %q got %q", tc.code, ve.Issues[0].Code)
+			}
+			if ve.Issues[0].Message != tc.msg {
+				t.Fatalf("msg: want %q got %q", tc.msg, ve.Issues[0].Message)
+			}
+		})
 	}
 }

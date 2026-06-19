@@ -128,24 +128,25 @@ func TestDuration_Comparators(t *testing.T) {
 		schema   *duration.Schema
 		input    time.Duration
 		wantCode string
+		wantMsg  string
 	}{
-		{"eq_ok", duration.New().Eq(base), base, ""},
-		{"eq_fail", duration.New().Eq(base), base + time.Second, duration.CodeEq},
+		{"eq_ok", duration.New().Eq(base), base, "", ""},
+		{"eq_fail", duration.New().Eq(base), base + time.Second, duration.CodeEq, duration.Msg.Eq},
 
-		{"ne_ok", duration.New().Ne(base), base + time.Second, ""},
-		{"ne_fail", duration.New().Ne(base), base, duration.CodeNe},
+		{"ne_ok", duration.New().Ne(base), base + time.Second, "", ""},
+		{"ne_fail", duration.New().Ne(base), base, duration.CodeNe, duration.Msg.Ne},
 
-		{"gt_ok", duration.New().Gt(base), base + time.Second, ""},
-		{"gt_fail", duration.New().Gt(base), base, duration.CodeGt},
+		{"gt_ok", duration.New().Gt(base), base + time.Second, "", ""},
+		{"gt_fail", duration.New().Gt(base), base, duration.CodeGt, duration.Msg.Gt},
 
-		{"gte_ok", duration.New().Gte(base), base, ""},
-		{"gte_fail", duration.New().Gte(base), base - time.Second, duration.CodeGte},
+		{"gte_ok", duration.New().Gte(base), base, "", ""},
+		{"gte_fail", duration.New().Gte(base), base - time.Second, duration.CodeGte, duration.Msg.Gte},
 
-		{"lt_ok", duration.New().Lt(base), base - time.Second, ""},
-		{"lt_fail", duration.New().Lt(base), base, duration.CodeLt},
+		{"lt_ok", duration.New().Lt(base), base - time.Second, "", ""},
+		{"lt_fail", duration.New().Lt(base), base, duration.CodeLt, duration.Msg.Lt},
 
-		{"lte_ok", duration.New().Lte(base), base, ""},
-		{"lte_fail", duration.New().Lte(base), base + time.Second, duration.CodeLte},
+		{"lte_ok", duration.New().Lte(base), base, "", ""},
+		{"lte_fail", duration.New().Lte(base), base + time.Second, duration.CodeLte, duration.Msg.Lte},
 	}
 
 	for _, tc := range cases {
@@ -161,7 +162,10 @@ func TestDuration_Comparators(t *testing.T) {
 
 			validationError := testkit.RequireValidationError(t, err)
 			if validationError.Issues[0].Code != tc.wantCode {
-				t.Fatalf("expected code %q, got %q", tc.wantCode, validationError.Issues[0].Code)
+				t.Fatalf("code: want %q got %q", tc.wantCode, validationError.Issues[0].Code)
+			}
+			if validationError.Issues[0].Message != tc.wantMsg {
+				t.Fatalf("msg: want %q got %q", tc.wantMsg, validationError.Issues[0].Message)
 			}
 		})
 	}

@@ -166,27 +166,28 @@ func TestRecord_LengthComparators(t *testing.T) {
 		schema   *record.Schema[int]
 		input    map[string]int
 		wantCode string
+		wantMsg  string
 	}{
-		{"len_ok", record.New[int]().Len(2), map[string]int{"a": 1, "b": 2}, ""},
-		{"len_fail", record.New[int]().Len(2), map[string]int{"a": 1}, record.CodeLen},
+		{"len_ok", record.New[int]().Len(2), map[string]int{"a": 1, "b": 2}, "", ""},
+		{"len_fail", record.New[int]().Len(2), map[string]int{"a": 1}, record.CodeLen, record.Msg.Len},
 
-		{"eq_ok", record.New[int]().Eq(2), map[string]int{"a": 1, "b": 2}, ""},
-		{"eq_fail", record.New[int]().Eq(2), map[string]int{"a": 1}, record.CodeEq},
+		{"eq_ok", record.New[int]().Eq(2), map[string]int{"a": 1, "b": 2}, "", ""},
+		{"eq_fail", record.New[int]().Eq(2), map[string]int{"a": 1}, record.CodeEq, record.Msg.Eq},
 
-		{"ne_ok", record.New[int]().Ne(2), map[string]int{"a": 1}, ""},
-		{"ne_fail", record.New[int]().Ne(2), map[string]int{"a": 1, "b": 2}, record.CodeNe},
+		{"ne_ok", record.New[int]().Ne(2), map[string]int{"a": 1}, "", ""},
+		{"ne_fail", record.New[int]().Ne(2), map[string]int{"a": 1, "b": 2}, record.CodeNe, record.Msg.Ne},
 
-		{"gt_ok", record.New[int]().Gt(2), map[string]int{"a": 1, "b": 2, "c": 3}, ""},
-		{"gt_fail", record.New[int]().Gt(2), map[string]int{"a": 1, "b": 2}, record.CodeGt},
+		{"gt_ok", record.New[int]().Gt(2), map[string]int{"a": 1, "b": 2, "c": 3}, "", ""},
+		{"gt_fail", record.New[int]().Gt(2), map[string]int{"a": 1, "b": 2}, record.CodeGt, record.Msg.Gt},
 
-		{"gte_ok", record.New[int]().Gte(2), map[string]int{"a": 1, "b": 2}, ""},
-		{"gte_fail", record.New[int]().Gte(2), map[string]int{"a": 1}, record.CodeGte},
+		{"gte_ok", record.New[int]().Gte(2), map[string]int{"a": 1, "b": 2}, "", ""},
+		{"gte_fail", record.New[int]().Gte(2), map[string]int{"a": 1}, record.CodeGte, record.Msg.Gte},
 
-		{"lt_ok", record.New[int]().Lt(2), map[string]int{"a": 1}, ""},
-		{"lt_fail", record.New[int]().Lt(2), map[string]int{"a": 1, "b": 2}, record.CodeLt},
+		{"lt_ok", record.New[int]().Lt(2), map[string]int{"a": 1}, "", ""},
+		{"lt_fail", record.New[int]().Lt(2), map[string]int{"a": 1, "b": 2}, record.CodeLt, record.Msg.Lt},
 
-		{"lte_ok", record.New[int]().Lte(2), map[string]int{"a": 1, "b": 2}, ""},
-		{"lte_fail", record.New[int]().Lte(2), map[string]int{"a": 1, "b": 2, "c": 3}, record.CodeLte},
+		{"lte_ok", record.New[int]().Lte(2), map[string]int{"a": 1, "b": 2}, "", ""},
+		{"lte_fail", record.New[int]().Lte(2), map[string]int{"a": 1, "b": 2, "c": 3}, record.CodeLte, record.Msg.Lte},
 	}
 
 	for _, tc := range cases {
@@ -202,7 +203,10 @@ func TestRecord_LengthComparators(t *testing.T) {
 
 			validationError := testkit.RequireValidationError(t, err)
 			if validationError.Issues[0].Code != tc.wantCode {
-				t.Fatalf("expected code %q, got %q", tc.wantCode, validationError.Issues[0].Code)
+				t.Fatalf("code: want %q got %q", tc.wantCode, validationError.Issues[0].Code)
+			}
+			if validationError.Issues[0].Message != tc.wantMsg {
+				t.Fatalf("msg: want %q got %q", tc.wantMsg, validationError.Issues[0].Message)
 			}
 		})
 	}

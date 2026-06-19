@@ -1,4 +1,4 @@
-// schema/options.go
+// validate/schema/options.go
 package schema
 
 import "time"

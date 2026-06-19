@@ -1,6 +1,9 @@
 go 1.25
 
 use (
+	./_tools/badge
+	./_tools/tag
+	./_tools/clean
 	./cqrs
 	./di
 	./env
@@ -10,7 +13,4 @@ use (
 	./search
 	./util
 	./validate
-	./_tools/badge
-	./_tools/tag
-	./_tools/clean
 )

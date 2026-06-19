@@ -154,6 +154,21 @@ s.Field(&t.Algorithm).Transform(func(val any) (any, error) {
 })
 ```
 
+### Internationalization (i18n) & Custom Messages
+The library allows you to easily override standard validation messages globally by modifying the exported `Msg` variables in each schema package. This is perfectly suited for translations or custom error phrasing.
+
+```go
+import "github.com/leandroluk/gox/validate/schema/number"
+
+func init() {
+    // Override standard messages globally for the number schema
+    number.Msg.Eq = "deve ser igual a"
+    number.Msg.Gt = "deve ser maior que"
+    number.Msg.Min = "valor muito pequeno"
+}
+```
+This strongly-typed pattern gives you IDE auto-completion and prevents typos compared to map-based dictionary configurations.
+
 ## Error Handling
 
 Errors are returned as `v.ValidationError`, which contains a list of issues.

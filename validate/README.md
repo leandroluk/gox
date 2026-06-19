@@ -180,7 +180,7 @@ Each issue has:
 
 ## Documentation
 
-- Migration from `go-playground/validate`: [`docs/migration-go-playground.md`](docs/migration-go-playground.md)
+- Migration from `go-playground/validate`: [`docs/migration-go-playground-validator.md`](docs/migration-go-playground-validator.md)
 - Migration from `ozzo-validation`: [`docs/migration-ozzo-validator.md`](docs/migration-ozzo-validator.md)
 - Migration from `asaskevich/govalidator`: [`docs/migration-asaskevich-govalidator.md`](docs/migration-asaskevich-govalidator.md)
 - Schema reference: [`docs/schemas.md`](docs/schemas.md)

@@ -253,14 +253,23 @@ func Validate[T any](input any, optionList ...Option) (T, error) {
 
 // FieldBuilder is the entry point for defining field rules.
 type FieldBuilder[T any] = object.FieldBuilder[T]
+
+// TextFieldBuilder is the entry point for defining rules on string fields.
 type TextFieldBuilder[T any] = object.TextFieldBuilder[T]
+
+// NumberFieldBuilder is the entry point for defining rules on numeric fields.
 type NumberFieldBuilder[T any] = object.NumberFieldBuilder[T]
+
+// BooleanFieldBuilder is the entry point for defining rules on boolean fields.
 type BooleanFieldBuilder[T any] = object.BooleanFieldBuilder[T]
+
+// DateFieldBuilder is the entry point for defining rules on date fields.
 type DateFieldBuilder[T any] = object.DateFieldBuilder[T]
+
+// DurationFieldBuilder is the entry point for defining rules on duration fields.
 type DurationFieldBuilder[T any] = object.DurationFieldBuilder[T]
 
-// Condition Operators
-
+// ConditionOp is a type that represents a condition operator used in conditional validation.
 type ConditionOp = object.ConditionOp
 
 const (

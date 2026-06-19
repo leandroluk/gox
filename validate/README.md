@@ -22,7 +22,7 @@ Validation logic lives in the **Infrastructure** or **Presentation** layer, defi
 ## Installation
 
 ```bash
-go get github.com/leandroluk/gox/v
+go get github.com/leandroluk/gox/validate
 ```
 
 ## Summary
@@ -41,6 +41,7 @@ go get github.com/leandroluk/gox/v
     - [Coercion (Opt-in)](#coercion-opt-in)
     - [Fluent Builders](#fluent-builders)
     - [Transformation](#transformation)
+    - [Internationalization (i18n) \& Custom Messages](#internationalization-i18n--custom-messages)
   - [Error Handling](#error-handling)
   - [Documentation](#documentation)
 

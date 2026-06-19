@@ -1,4 +1,4 @@
-# Migrating from go-playground/validate to v
+# Migrating from go-playground/validate to leandroluk/gox/validate
 
 In `go-playground/validate`, you define validation using **struct tags**. In `validate`, you define it in **Go code**.
 There are no "magic tags". Schemas are explicit. It is more verbose initially but much less mysterious and easier to debug.

@@ -1,4 +1,4 @@
-# Migrating from ozzo-validation to v
+# Migrating from ozzo-validation to leandroluk/gox/validate
 
 `ozzo-validation` is a popular library that validates structs by defining rules for fields.
 `v` shares some similarities (explicit rules in Go) but differs in **how** schemas are constructed and reused.

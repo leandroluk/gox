@@ -1,4 +1,4 @@
-# Migrating from asaskevich/govalidator to v
+# Migrating from asaskevich/govalidator to leandroluk/gox/validate
 
 `asaskevich/govalidator` is a classic Go library acting as both a **struct validator** (via tags) and a **string utility** belt (e.g. `IsEmail(str)`).
 `validate` upgrades this with **Type Safety**, strict **Separation of Concerns**, and a consistent **Fluent API**.

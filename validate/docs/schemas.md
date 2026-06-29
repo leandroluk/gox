@@ -35,7 +35,7 @@ Uses `v.Text()`.
 - `.Lowercase()` / `.Uppercase()` (validates case, does not change it unless coerce is used presumably? No, usually validation)
 
 ### Regex & Formats
-- `.Pattern(regex)` / `.PatternRegexp(*regexp.Regexp)`
+- `.Pattern(regex, ...)` / `.PatternRegexp(*regexp.Regexp, ...)` — accepts one or more patterns; **all must match** (AND semantics). Error meta includes `patterns` (only the failing ones). Go uses RE2 which has no lookaheads — pass multiple patterns instead of a single lookahead expression.
 - `.Email()`
 - `.URL()`
 - `.HTTPURL()`
@@ -91,6 +91,17 @@ validates **hex** (fixed length) or **base64**.
 ```go
 s := v.Text().Required().Email()
 out, err := s.Validate("john@example.com")
+```
+
+Password (min 8, max 50, 1 lower, 1 upper, 1 digit, 1 special):
+```go
+// RE2 has no lookaheads — use multiple patterns (all must match).
+s := v.Text().Required().Min(8).Max(50).Pattern(
+    `[a-z]`,        // at least one lowercase
+    `[A-Z]`,        // at least one uppercase
+    `[0-9]`,        // at least one digit
+    `[^a-zA-Z0-9]`, // at least one special char
+)
 ```
 
 ---

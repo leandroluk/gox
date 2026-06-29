@@ -601,3 +601,63 @@ func TestText_LengthAndPattern(t *testing.T) {
 		})
 	}
 }
+
+func TestText_PatternMulti(t *testing.T) {
+	// AND semantics: all patterns must match.
+	// RE2 has no lookaheads, so multi-pattern is the idiomatic way to express
+	// compound constraints like password rules.
+	passwordSchema := text.New().
+		Min(8).
+		Max(50).
+		Pattern(`[a-z]`, `[A-Z]`, `[0-9]`, `[^a-zA-Z0-9]`)
+
+	valid := []string{
+		"Abcdef1!",
+		"MyP@ssw0rd",
+		"C0mplex#Pass",
+	}
+	for _, v := range valid {
+		if _, err := passwordSchema.Validate(v); err != nil {
+			t.Errorf("valid %q should pass: %v", v, err)
+		}
+	}
+
+	invalid := []struct {
+		input string
+		desc  string
+	}{
+		{"abcdef1!", "no uppercase"},
+		{"ABCDEF1!", "no lowercase"},
+		{"Abcdefgh!", "no digit"},
+		{"Abcdef12", "no special char"},
+		{"Ab1!", "too short"},
+	}
+	for _, tc := range invalid {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, err := passwordSchema.Validate(tc.input)
+			if err == nil {
+				t.Fatalf("invalid %q (%s) should fail", tc.input, tc.desc)
+			}
+		})
+	}
+
+	t.Run("meta reports only failing patterns", func(t *testing.T) {
+		_, err := passwordSchema.Validate("abcdef1!")
+		ve := testkit.RequireValidationError(t, err)
+		if ve.Issues[0].Code != text.CodePattern {
+			t.Fatalf("code: want %q got %q", text.CodePattern, ve.Issues[0].Code)
+		}
+		patterns, ok := ve.Issues[0].Meta["patterns"]
+		if !ok {
+			t.Fatal("meta missing 'patterns' key")
+		}
+		failed, ok := patterns.([]string)
+		if !ok {
+			t.Fatalf("meta 'patterns' expected []string, got %T", patterns)
+		}
+		// "abcdef1!" only fails [A-Z]
+		if len(failed) != 1 || failed[0] != "[A-Z]" {
+			t.Fatalf("expected [\"[A-Z]\"], got %v", failed)
+		}
+	})
+}

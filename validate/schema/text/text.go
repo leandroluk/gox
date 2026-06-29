@@ -743,25 +743,49 @@ func (s *Schema) Uppercase() *Schema {
 	return s
 }
 
-func (s *Schema) Pattern(value string) *Schema {
-	if value == "" {
+// Pattern accepts one or more regex strings (AND semantics: all must match).
+// Passing zero args removes any previously set pattern rule.
+// Invalid regex strings are silently skipped; if all are invalid the call is a no-op.
+// Go uses RE2 which has no lookaheads — use multiple patterns instead of a single
+// complex lookahead regex (e.g. password rules: one pattern per character class).
+func (s *Schema) Pattern(values ...string) *Schema {
+	if len(values) == 0 {
 		s.rules.Remove(CodePattern)
 		return s
 	}
-	compiled, err := regexp.Compile(value)
-	if err != nil {
+	compiled := make([]*regexp.Regexp, 0, len(values))
+	for _, v := range values {
+		if v == "" {
+			continue
+		}
+		r, err := regexp.Compile(v)
+		if err != nil {
+			continue
+		}
+		compiled = append(compiled, r)
+	}
+	if len(compiled) == 0 {
+		s.rules.Remove(CodePattern)
 		return s
 	}
-	s.rules.Put(Rule.Pattern(CodePattern, compiled))
+	s.rules.Put(Rule.Pattern(CodePattern, compiled...))
 	return s
 }
 
-func (s *Schema) PatternRegexp(value *regexp.Regexp) *Schema {
-	if value == nil {
+// PatternRegexp accepts one or more compiled regexps (AND semantics: all must match).
+// Nil values are ignored. Passing zero non-nil args removes the pattern rule.
+func (s *Schema) PatternRegexp(values ...*regexp.Regexp) *Schema {
+	compiled := make([]*regexp.Regexp, 0, len(values))
+	for _, v := range values {
+		if v != nil {
+			compiled = append(compiled, v)
+		}
+	}
+	if len(compiled) == 0 {
 		s.rules.Remove(CodePattern)
 		return s
 	}
-	s.rules.Put(Rule.Pattern(CodePattern, value))
+	s.rules.Put(Rule.Pattern(CodePattern, compiled...))
 	return s
 }
 
@@ -1288,7 +1312,7 @@ var Rule = struct {
 	Number        func(code string) ruleset.Rule[string]
 	Numeric       func(code string) ruleset.Rule[string]
 	OneOf         func(code string, values ...string) ruleset.Rule[string]
-	Pattern       func(code string, pattern *regexp.Regexp) ruleset.Rule[string]
+	Pattern       func(code string, patterns ...*regexp.Regexp) ruleset.Rule[string]
 	Port          func(code string) ruleset.Rule[string]
 	PrintASCII    func(code string) ruleset.Rule[string]
 	RGB           func(code string) ruleset.Rule[string]
@@ -1770,16 +1794,24 @@ var Rule = struct {
 			return false, types.AnyMap{"allowed": values, "actual": actual}
 		})
 	},
-	Pattern: func(code string, pattern *regexp.Regexp) ruleset.Rule[string] {
-		patternString := ""
-		if pattern != nil {
-			patternString = pattern.String()
+	Pattern: func(code string, patterns ...*regexp.Regexp) ruleset.Rule[string] {
+		patternStrings := make([]string, len(patterns))
+		for i, p := range patterns {
+			if p != nil {
+				patternStrings[i] = p.String()
+			}
 		}
 		return newRule(code, Msg.Pattern, func(actual string) (bool, types.AnyMap) {
-			if pattern != nil && pattern.MatchString(actual) {
+			var failed []string
+			for i, p := range patterns {
+				if p == nil || !p.MatchString(actual) {
+					failed = append(failed, patternStrings[i])
+				}
+			}
+			if len(failed) == 0 {
 				return true, nil
 			}
-			return false, types.AnyMap{"pattern": patternString, "actual": actual}
+			return false, types.AnyMap{"patterns": failed, "actual": actual}
 		})
 	},
 	Port: func(code string) ruleset.Rule[string] {

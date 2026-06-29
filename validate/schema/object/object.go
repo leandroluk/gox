@@ -1535,8 +1535,8 @@ func (b *TextFieldBuilder[T]) UUID() *TextFieldBuilder[T] {
 	return b
 }
 
-func (b *TextFieldBuilder[T]) Pattern(pattern string) *TextFieldBuilder[T] {
-	b.textSchema.Pattern(pattern)
+func (b *TextFieldBuilder[T]) Pattern(values ...string) *TextFieldBuilder[T] {
+	b.textSchema.Pattern(values...)
 	b.build()
 	return b
 }

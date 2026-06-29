@@ -13,6 +13,7 @@ import (
 	"github.com/leandroluk/gox/validate/internal/engine"
 	"github.com/leandroluk/gox/validate/internal/issues"
 	"github.com/leandroluk/gox/validate/internal/registry"
+	"github.com/leandroluk/gox/validate/internal/ruleset"
 	"github.com/leandroluk/gox/validate/internal/types"
 	"github.com/leandroluk/gox/validate/schema"
 	"github.com/leandroluk/gox/validate/schema/array"
@@ -84,6 +85,10 @@ type AnyOfSchema[T any] = combinator.AnyOfSchema[T]
 
 // OneOfSchema succeeds if exactly one schema succeeds.
 type OneOfSchema[T any] = combinator.OneOfSchema[T]
+
+type Rule[T any] = ruleset.Rule[T]
+
+type RuleFn[T any] = ruleset.RuleFn[T]
 
 // WithFailFast stops validation on the first error.
 func WithFailFast(value bool) Option {

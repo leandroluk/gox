@@ -86,8 +86,13 @@ type AnyOfSchema[T any] = combinator.AnyOfSchema[T]
 // OneOfSchema succeeds if exactly one schema succeeds.
 type OneOfSchema[T any] = combinator.OneOfSchema[T]
 
+// Reporter is the interface passed to Custom rules for reporting validation issues.
+type Reporter = ruleset.Reporter
+
+// Rule is a named validation rule with a key and apply function.
 type Rule[T any] = ruleset.Rule[T]
 
+// RuleFn is the function signature for custom validation rules used in Custom().
 type RuleFn[T any] = ruleset.RuleFn[T]
 
 // WithFailFast stops validation on the first error.
